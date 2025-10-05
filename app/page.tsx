@@ -1,16 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 type Tab = 'lyrics' | 'bible';
-
-interface BibleBook {
-  book: string;
-  chapters: {
-    chapter: string;
-    verses: { verse: string; text: string; }[];
-  }[];
-}
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('lyrics');
@@ -223,7 +215,7 @@ function BibleGenerator() {
             required
           />
           <p className="mt-3 text-sm text-gray-500">
-            Enter any Bible reference (e.g., "John 3:16", "Psalm 23", "Romans 8:28-39")
+            Enter any Bible reference (e.g., &quot;John 3:16&quot;, &quot;Psalm 23&quot;, &quot;Romans 8:28-39&quot;)
           </p>
         </div>
 
