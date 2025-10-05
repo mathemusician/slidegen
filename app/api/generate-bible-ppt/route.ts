@@ -12,10 +12,25 @@ export async function POST(request: Request) {
       );
     }
 
-    // Split verses by lines - each line becomes a slide
-    const lines = verses.split('\n')
-      .map((line: string) => line.trim())
-      .filter((line: string) => line.length > 0);
+    // Split verses - each verse becomes a slide
+    // ESV API returns verses with [verse number] format
+    // We'll split by verse numbers to create individual slides
+    const versePattern = /\[(\d+)\]\s*/g;
+    const verseParts = verses.split(versePattern).filter((part: string) => part.trim().length > 0);
+    
+    const individualVerses: string[] = [];
+    for (let i = 0; i < verseParts.length; i += 2) {
+      if (i + 1 < verseParts.length) {
+        const verseNum = verseParts[i];
+        const verseText = verseParts[i + 1].trim();
+        individualVerses.push(`${verseText}\n\n(Verse ${verseNum})`);
+      }
+    }
+    
+    // If no verse numbers found, split by newlines as fallback
+    const lines = individualVerses.length > 0 
+      ? individualVerses 
+      : verses.split('\n').map((line: string) => line.trim()).filter((line: string) => line.length > 0);
 
     // Create PowerPoint
     const pptx = new PptxGenJS();
