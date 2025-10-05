@@ -55,12 +55,12 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <header className="min-h-screen flex items-center justify-center px-8">
+      <header className="min-h-screen flex items-center justify-center px-4 md:px-8">
         <div className="text-center max-w-7xl">
-          <h1 className="text-[8rem] md:text-[12rem] lg:text-[16rem] font-bold text-black mb-12 leading-none tracking-tight">
+          <h1 className="text-6xl sm:text-[8rem] md:text-[12rem] lg:text-[16rem] font-bold text-black mb-8 md:mb-12 leading-none tracking-tight">
             SlideGen
           </h1>
-          <p className="text-3xl md:text-4xl lg:text-5xl text-gray-600 mb-20 max-w-5xl mx-auto leading-relaxed font-light">
+          <p className="text-xl sm:text-2xl md:text-4xl lg:text-5xl text-gray-600 mb-12 md:mb-20 max-w-5xl mx-auto leading-relaxed font-light px-4">
             Transform lyrics and Bible verses into beautiful presentations
           </p>
         </div>
@@ -104,12 +104,12 @@ function LyricsGenerator() {
   };
 
   return (
-    <div>
-      <h2 className="text-6xl md:text-7xl font-bold text-gray-900 mb-16">Create from Lyrics</h2>
+    <div className="px-4 md:px-0">
+      <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-8 md:mb-16">Create from Lyrics</h2>
       
-      <form onSubmit={handleSubmit} className="space-y-16">
+      <form onSubmit={handleSubmit} className="space-y-8 md:space-y-16">
         <div>
-          <label className="block text-lg text-gray-500 mb-4 tracking-wider">
+          <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
             TITLE
           </label>
           <input
@@ -117,29 +117,29 @@ function LyricsGenerator() {
             placeholder="Enter presentation title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-0 py-6 text-4xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent placeholder:text-gray-300"
+            className="w-full px-0 py-4 md:py-6 text-2xl md:text-4xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent placeholder:text-gray-300"
           />
         </div>
 
         <div>
-          <label className="block text-lg text-gray-500 mb-4 tracking-wider">
+          <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
             LYRICS
           </label>
           <textarea
             placeholder="Paste your lyrics here..."
             value={lyrics}
             onChange={(e) => setLyrics(e.target.value)}
-            rows={12}
+            rows={10}
             required
-            className="w-full px-0 py-6 text-2xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors resize-none bg-transparent placeholder:text-gray-300"
+            className="w-full px-0 py-4 md:py-6 text-xl md:text-2xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors resize-none bg-transparent placeholder:text-gray-300"
           />
         </div>
 
-        <div className="flex justify-center pt-8">
+        <div className="flex justify-center pt-4 md:pt-8">
           <button
             type="submit"
             disabled={loading}
-            className="px-16 py-6 bg-white border-2 border-black text-black rounded-full font-semibold hover:bg-black hover:text-white disabled:opacity-50 transition-all text-2xl"
+            className="w-full sm:w-auto px-12 sm:px-16 md:px-20 py-6 sm:py-7 md:py-8 bg-white border-2 md:border-3 border-black text-black rounded-full font-bold hover:bg-black hover:text-white disabled:opacity-50 transition-all text-xl sm:text-2xl md:text-3xl shadow-lg"
           >
             {loading ? 'Generating...' : 'Generate Presentation'}
           </button>
@@ -147,12 +147,12 @@ function LyricsGenerator() {
       </form>
 
       {downloadUrl && (
-        <div className="mt-20 p-12 bg-gray-50 rounded-3xl text-center">
-          <p className="text-xl font-medium text-gray-500 mb-8 tracking-wider">YOUR PRESENTATION IS READY</p>
+        <div className="mt-12 md:mt-20 p-8 md:p-12 bg-gray-50 rounded-3xl text-center">
+          <p className="text-lg md:text-xl font-medium text-gray-500 mb-6 md:mb-8 tracking-wider">YOUR PRESENTATION IS READY</p>
           <a
             href={downloadUrl}
             download={`${title || 'Lyrics'}.pptx`}
-            className="inline-block px-16 py-6 bg-white border-2 border-black text-black rounded-full font-semibold hover:bg-black hover:text-white transition-all text-2xl"
+            className="inline-block w-full sm:w-auto px-12 sm:px-16 md:px-20 py-6 sm:py-7 md:py-8 bg-white border-2 md:border-3 border-black text-black rounded-full font-bold hover:bg-black hover:text-white transition-all text-xl sm:text-2xl md:text-3xl shadow-lg"
           >
             Download PowerPoint
           </a>
@@ -251,19 +251,19 @@ function BibleGenerator() {
   };
 
   return (
-    <div>
-      <h2 className="text-6xl md:text-7xl font-bold text-gray-900 mb-16">Create from Bible</h2>
+    <div className="px-4 md:px-0">
+      <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-8 md:mb-16">Create from Bible</h2>
       
-      <form onSubmit={handleSubmit} className="space-y-16">
-        <div className="grid grid-cols-2 gap-12">
+      <form onSubmit={handleSubmit} className="space-y-8 md:space-y-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-12">
           <div>
-            <label className="block text-lg text-gray-500 mb-4 tracking-wider">
+            <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
               BOOK
             </label>
             <select
               value={selectedBook}
               onChange={(e) => setSelectedBook(e.target.value)}
-              className="w-full px-0 py-6 text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent"
+              className="w-full px-0 py-4 md:py-6 text-2xl md:text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent"
               required
             >
               <option value="">Select book</option>
@@ -274,13 +274,13 @@ function BibleGenerator() {
           </div>
 
           <div>
-            <label className="block text-lg text-gray-500 mb-4 tracking-wider">
+            <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
               CHAPTER
             </label>
             <select
               value={selectedChapter}
               onChange={(e) => setSelectedChapter(e.target.value)}
-              className="w-full px-0 py-6 text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent"
+              className="w-full px-0 py-4 md:py-6 text-2xl md:text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent"
               disabled={!selectedBook}
               required
             >
@@ -292,9 +292,9 @@ function BibleGenerator() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-12">
           <div>
-            <label className="block text-lg text-gray-500 mb-4 tracking-wider">
+            <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
               VERSE START
             </label>
             <input
@@ -303,14 +303,14 @@ function BibleGenerator() {
               onChange={(e) => setVerseStart(e.target.value)}
               min="1"
               max={availableVerses}
-              className="w-full px-0 py-6 text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent"
+              className="w-full px-0 py-4 md:py-6 text-2xl md:text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent"
               disabled={!selectedChapter}
               required
             />
           </div>
 
           <div>
-            <label className="block text-lg text-gray-500 mb-4 tracking-wider">
+            <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
               VERSE END
             </label>
             <input
@@ -320,17 +320,17 @@ function BibleGenerator() {
               min={verseStart || 1}
               max={availableVerses}
               placeholder="Optional"
-              className="w-full px-0 py-6 text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent placeholder:text-gray-300"
+              className="w-full px-0 py-4 md:py-6 text-2xl md:text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent placeholder:text-gray-300"
               disabled={!selectedChapter}
             />
           </div>
         </div>
 
-        <div className="flex justify-center pt-8">
+        <div className="flex justify-center pt-4 md:pt-8">
           <button
             type="submit"
             disabled={loading}
-            className="px-16 py-6 bg-white border-2 border-black text-black rounded-full font-semibold hover:bg-black hover:text-white disabled:opacity-50 transition-all text-2xl"
+            className="w-full sm:w-auto px-12 sm:px-16 md:px-20 py-6 sm:py-7 md:py-8 bg-white border-2 md:border-3 border-black text-black rounded-full font-bold hover:bg-black hover:text-white disabled:opacity-50 transition-all text-xl sm:text-2xl md:text-3xl shadow-lg"
           >
             {loading ? 'Generating...' : 'Generate Presentation'}
           </button>
@@ -338,12 +338,12 @@ function BibleGenerator() {
       </form>
 
       {downloadUrl && (
-        <div className="mt-20 p-12 bg-gray-50 rounded-3xl text-center">
-          <p className="text-xl font-medium text-gray-500 mb-8 tracking-wider">YOUR PRESENTATION IS READY</p>
+        <div className="mt-12 md:mt-20 p-8 md:p-12 bg-gray-50 rounded-3xl text-center">
+          <p className="text-lg md:text-xl font-medium text-gray-500 mb-6 md:mb-8 tracking-wider">YOUR PRESENTATION IS READY</p>
           <a
             href={downloadUrl}
             download={`${selectedBook}_${selectedChapter}.pptx`}
-            className="inline-block px-16 py-6 bg-white border-2 border-black text-black rounded-full font-semibold hover:bg-black hover:text-white transition-all text-2xl"
+            className="inline-block w-full sm:w-auto px-12 sm:px-16 md:px-20 py-6 sm:py-7 md:py-8 bg-white border-2 md:border-3 border-black text-black rounded-full font-bold hover:bg-black hover:text-white transition-all text-xl sm:text-2xl md:text-3xl shadow-lg"
           >
             Download PowerPoint
           </a>
