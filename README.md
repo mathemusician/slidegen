@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lyrics to PowerPoint
 
-## Getting Started
+A simple web application that converts any lyrics into PowerPoint presentations.
 
-First, run the development server:
+## Features
+
+- **No API keys required** - Just paste lyrics and go!
+- **Works with any lyrics** - Copy from Genius, AZLyrics, or type your own
+- **Instant generation** - PowerPoint created in seconds
+- **Clean slides** - Professional formatting with 3 lines per slide
+- **Download immediately** - No server storage, direct download
+
+## Prerequisites
+
+- Node.js 18+ (https://nodejs.org/)
+
+## Quick Start
 
 ```bash
+# Install dependencies
+npm install
+
+# Run the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+That's it! No API keys, no Python backend, no configuration needed.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How to Use
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Open http://localhost:3000 in your browser
+2. (Optional) Enter a title for your presentation
+3. Paste lyrics into the text area
+   - Copy from Genius, AZLyrics, or any lyrics site
+   - Or type your own text
+4. Click "Generate PowerPoint"
+5. Download your presentation!
 
-## Learn More
+## Built With
 
-To learn more about Next.js, take a look at the following resources:
+- [Next.js 15](https://nextjs.org/) - React framework with App Router
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [PptxGenJS](https://gitbrent.github.io/PptxGenJS/) - PowerPoint generation (https://gitbrent.github.io/PptxGenJS/docs/api.html)
+- [Heroicons](https://heroicons.com/) - UI icons
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Deploy to [Vercel](https://vercel.com/) with one click:
 
-## Deploy on Vercel
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/lyrics-to-ppt)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+No environment variables needed!
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT License - See LICENSE file for details
