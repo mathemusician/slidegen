@@ -163,82 +163,37 @@ function LyricsGenerator() {
 }
 
 function BibleGenerator() {
-  const [books, setBooks] = useState<string[]>([]);
-  const [selectedBook, setSelectedBook] = useState('');
-  const [selectedChapter, setSelectedChapter] = useState('');
-  const [verseStart, setVerseStart] = useState('');
-  const [verseEnd, setVerseEnd] = useState('');
-  const [bibleData, setBibleData] = useState<BibleBook | null>(null);
-  const [availableChapters, setAvailableChapters] = useState<number>(0);
-  const [availableVerses, setAvailableVerses] = useState<number>(0);
+  const [passage, setPassage] = useState('');
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
-
-  useEffect(() => {
-    fetch('/bible/Books.json')
-      .then(res => res.json())
-      .then(data => setBooks(data))
-      .catch(err => console.error('Error loading books:', err));
-  }, []);
-
-  useEffect(() => {
-    if (!selectedBook) return;
-    
-    const filename = selectedBook.replace(/ /g, '');
-    fetch(`/bible/${filename}.json`)
-      .then(res => res.json())
-      .then((data: BibleBook) => {
-        setBibleData(data);
-        setAvailableChapters(data.chapters.length);
-        setSelectedChapter('1');
-        setVerseStart('1');
-        setVerseEnd('');
-      })
-      .catch(err => console.error('Error loading book data:', err));
-  }, [selectedBook]);
-
-  useEffect(() => {
-    if (!bibleData || !selectedChapter) return;
-    
-    const chapterData = bibleData.chapters.find(c => c.chapter === selectedChapter);
-    if (chapterData) {
-      setAvailableVerses(chapterData.verses.length);
-      setVerseStart('1');
-      setVerseEnd(chapterData.verses.length.toString());
-    }
-  }, [selectedChapter, bibleData]);
+  const [reference, setReference] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedBook || !selectedChapter || !verseStart) return;
+    if (!passage.trim()) return;
 
     setLoading(true);
     setDownloadUrl('');
 
-    const chapterData = bibleData?.chapters.find(c => c.chapter === selectedChapter);
-    if (!chapterData) {
-      setLoading(false);
-      return;
-    }
-
-    const start = parseInt(verseStart);
-    const end = verseEnd ? parseInt(verseEnd) : start;
-    const selectedVerses = chapterData.verses
-      .filter(v => {
-        const verseNum = parseInt(v.verse);
-        return verseNum >= start && verseNum <= end;
-      })
-      .map(v => `${v.text} (${selectedBook} ${selectedChapter}:${v.verse})`);
-
-    const versesText = selectedVerses.join('\n');
-    const title = `${selectedBook} ${selectedChapter}:${verseStart}${verseEnd ? `-${verseEnd}` : ''}`;
-
     try {
+      // Fetch verses from ESV API
+      const esvResponse = await fetch(`/api/esv?passage=${encodeURIComponent(passage)}`);
+      const esvData = await esvResponse.json();
+
+      if (!esvData.success) {
+        throw new Error('Failed to fetch passage');
+      }
+
+      const versesText = esvData.passages[0];
+      const ref = esvData.reference;
+      setReference(ref);
+
+      // Generate PowerPoint
       const response = await fetch('/api/generate-bible-ppt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ verses: versesText, title }),
+        body: JSON.stringify({ verses: versesText, title: ref }),
       });
 
       const data = await response.json();
@@ -255,75 +210,21 @@ function BibleGenerator() {
       <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-8 md:mb-16">Create from Bible</h2>
       
       <form onSubmit={handleSubmit} className="space-y-8 md:space-y-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-12">
-          <div>
-            <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
-              BOOK
-            </label>
-            <select
-              value={selectedBook}
-              onChange={(e) => setSelectedBook(e.target.value)}
-              className="w-full px-0 py-4 md:py-6 text-2xl md:text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent"
-              required
-            >
-              <option value="">Select book</option>
-              {books.map(book => (
-                <option key={book} value={book}>{book}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
-              CHAPTER
-            </label>
-            <select
-              value={selectedChapter}
-              onChange={(e) => setSelectedChapter(e.target.value)}
-              className="w-full px-0 py-4 md:py-6 text-2xl md:text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent"
-              disabled={!selectedBook}
-              required
-            >
-              <option value="">Select chapter</option>
-              {Array.from({ length: availableChapters }, (_, i) => i + 1).map(num => (
-                <option key={num} value={num}>{num}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-12">
-          <div>
-            <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
-              VERSE START
-            </label>
-            <input
-              type="number"
-              value={verseStart}
-              onChange={(e) => setVerseStart(e.target.value)}
-              min="1"
-              max={availableVerses}
-              className="w-full px-0 py-4 md:py-6 text-2xl md:text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent"
-              disabled={!selectedChapter}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
-              VERSE END
-            </label>
-            <input
-              type="number"
-              value={verseEnd}
-              onChange={(e) => setVerseEnd(e.target.value)}
-              min={verseStart || 1}
-              max={availableVerses}
-              placeholder="Optional"
-              className="w-full px-0 py-4 md:py-6 text-2xl md:text-3xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent placeholder:text-gray-300"
-              disabled={!selectedChapter}
-            />
-          </div>
+        <div>
+          <label className="block text-base md:text-lg text-gray-500 mb-3 md:mb-4 tracking-wider">
+            PASSAGE
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., John 3:16-17, Psalm 23, Romans 8:28-39"
+            value={passage}
+            onChange={(e) => setPassage(e.target.value)}
+            className="w-full px-0 py-4 md:py-6 text-2xl md:text-4xl font-light border-0 border-b-2 border-gray-300 focus:border-black focus:ring-0 transition-colors bg-transparent placeholder:text-gray-300"
+            required
+          />
+          <p className="mt-3 text-sm text-gray-500">
+            Enter any Bible reference (e.g., "John 3:16", "Psalm 23", "Romans 8:28-39")
+          </p>
         </div>
 
         <div className="flex justify-center pt-4 md:pt-8">
@@ -340,9 +241,10 @@ function BibleGenerator() {
       {downloadUrl && (
         <div className="mt-12 md:mt-20 p-8 md:p-12 bg-gray-50 rounded-3xl text-center">
           <p className="text-lg md:text-xl font-medium text-gray-500 mb-6 md:mb-8 tracking-wider">YOUR PRESENTATION IS READY</p>
+          <p className="text-base text-gray-600 mb-6">{reference}</p>
           <a
             href={downloadUrl}
-            download={`${selectedBook}_${selectedChapter}.pptx`}
+            download={`${reference}.pptx`}
             className="inline-block w-full sm:w-auto px-12 sm:px-16 md:px-20 py-6 sm:py-7 md:py-8 bg-white border-2 md:border-3 border-black text-black rounded-full font-bold hover:bg-black hover:text-white transition-all text-xl sm:text-2xl md:text-3xl shadow-lg"
           >
             Download PowerPoint
