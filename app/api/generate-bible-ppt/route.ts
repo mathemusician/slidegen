@@ -86,10 +86,10 @@ export async function POST(request: Request) {
       downloadUrl: `data:application/vnd.openxmlformats-officedocument.presentationml.presentation;base64,${base64Data}`
     });
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error generating PowerPoint:', error);
     
-    const errorMessage = error.message || 'Failed to generate presentation. Please try again.';
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate presentation. Please try again.';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
