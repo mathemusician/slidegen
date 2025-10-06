@@ -5,12 +5,15 @@ const nextConfig = {
     config.resolve.alias.canvas = false;
     return config;
   },
-  // Enable server actions (if needed)
-  experimental: {
-    serverActions: true,
+  // Redirect root to index.html
+  async rewrites() {
+    return [
+      {
+        source: '/',
+        destination: '/index.html',
+      },
+    ];
   },
-  // Set the output to 'standalone' for better deployment
-  output: 'standalone',
 };
 
 module.exports = nextConfig;

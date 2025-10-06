@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SlideGen - Generate slides from scripture</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #f5f3f2;
+      --text: #0a0a0a;
+      --muted: #4b4b4b;
+      --card: #ffffff;
+      --ring: rgba(10,10,10,0.1);
+      --shadow: 0 1px 2px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.06);
+      --container: 1200px;
+      --radius: 20px;
+      --pill: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Playfair Display', Georgia, serif;
+    }
+
+    /* Layout */
+    .shell {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--container);
+      margin-inline: auto;
+      padding-inline: clamp(16px, 3vw, 32px);
+    }
+
+    /* Navigation */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: clamp(12px, 2vw, 24px);
+      padding-block: clamp(16px, 2.5vw, 28px);
+    }
+
+    .brand {
+      position: relative;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      font-size: clamp(24px, 2.6vw, 40px);
+      line-height: 1;
+      user-select: none;
+      background-image: linear-gradient(90deg, #0a0a0a 0%, #0a0a0a 30%, rgba(0,0,0,.6) 45%, #0a0a0a 70%, #0a0a0a 100%);
+      background-size: 200% 100%;
+      background-position: 0 0;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    @media (hover:hover) and (pointer:fine) {
+      .brand:hover {
+        animation: shimmer 1.2s ease forwards;
+      }
+    }
+
+    @keyframes shimmer {
+      from { background-position: -120% 0; }
+      to { background-position: 120% 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .brand, .brand:hover {
+        animation: none;
+        background-position: 0 0;
+        color: #0a0a0a;
+        -webkit-background-clip: initial;
+        background-clip: initial;
+      }
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: clamp(8px, 1.2vw, 16px);
+      align-items: center;
+    }
+
+    .btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(8px, 1.2vw, 10px) clamp(14px, 2vw, 18px);
+      border-radius: var(--pill);
+      border: 1px solid rgba(10,10,10,0.12);
+      background: var(--card);
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 600;
+      letter-spacing: 0.6px;
+      font-size: clamp(11px, 1.4vw, 14px);
+      text-transform: uppercase;
+      box-shadow: var(--shadow);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, filter .12s ease;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+    }
+    
+    @media (hover:hover) and (pointer:fine) {
+      .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.10), 0 12px 42px rgba(0,0,0,0.10);
+        border-color: rgba(10,10,10,0.20);
+      }
+    }
+    
+    .btn:active {
+      transform: scale(.97);
+      filter: brightness(.97);
+    }
+    
+    .btn:focus-visible {
+      outline: 2px solid var(--ring);
+      outline-offset: 2px;
+    }
+
+    .btn.active {
+      background: var(--text);
+      color: var(--card);
+      border-color: var(--text);
+    }
+
+    /* Ripple effect */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      background: rgba(0,0,0,.12);
+      transform: scale(0);
+      animation: ripple .6s ease-out forwards;
+    }
+
+    @keyframes ripple {
+      to {
+        transform: scale(1);
+        opacity: 0;
+      }
+    }
+
+    /* Hero */
+    main {
+      display: grid;
+      place-items: center;
+      min-height: calc(100dvh - 96px);
+    }
+
+    .hero {
+      text-align: center;
+      width: fit-content;
+      max-width: min(1200px, 92vw);
+      margin-inline: auto;
+      padding-block: clamp(48px, 12vh, 140px);
+      transition: transform .3s ease;
+      will-change: transform;
+    }
+
+    .hero h1 {
+      margin: 0 0 clamp(12px, 2vh, 18px) 0;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 900;
+      font-size: clamp(64px, 12vw, 148px);
+      line-height: 0.92;
+      letter-spacing: 0.2px;
+      font-feature-settings: "liga" 0;
+      font-kerning: none;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 2px;
+      position: relative;
+    }
+
+    .hero-title .title-ghost {
+      visibility: hidden;
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+    }
+
+    .hero-title .title-text {
+      display: inline-block;
+    }
+
+    .hero-title .title-text span {
+      display: inline-block;
+      transition: transform .35s cubic-bezier(0.34, 1.8, 0.64, 1);
+      will-change: transform;
+    }
+
+    @media (hover:hover) and (pointer:fine) {
+      #title:hover .title-text span {
+        transform: translateY(-32px) scale(1.15);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #title:hover .title-text span {
+        transform: none;
+      }
+    }
+
+    .hero-title .caret {
+      display: inline-block;
+      width: 3px;
+      height: 0.9em;
+      background: rgba(0,0,0,.75);
+      transform: translateY(2px);
+      animation: blink .75s step-end infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .caret {
+        animation: none;
+        opacity: 1;
+      }
+    }
+
+    .hero p {
+      margin: 0;
+      font-style: italic;
+      color: var(--muted);
+      font-size: clamp(18px, 2.2vw, 28px);
+    }
+
+    /* Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+      gap: clamp(20px, 3vw, 32px);
+      padding-block: clamp(32px, 5vh, 64px);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(10,10,10,0.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(20px, 3vw, 32px);
+    }
+
+    .card h2 {
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight: 700;
+      margin-bottom: clamp(16px, 2vw, 24px);
+    }
+
+    /* Form elements */
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: clamp(12px, 1.5vw, 16px);
+      border: 1px solid rgba(10,10,10,0.12);
+      border-radius: 8px;
+      font-size: clamp(14px, 1.6vw, 16px);
+      font-family: 'Inter', sans-serif;
+      background: var(--card);
+      color: var(--text);
+      transition: border-color 150ms ease;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--text);
+    }
+
+    input[type="text"][aria-invalid="true"],
+    textarea[aria-invalid="true"] {
+      border-color: #dc2626;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+      font-family: 'Inter', monospace;
+    }
+
+    .helper-text {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .error-text {
+      font-size: 13px;
+      color: #dc2626;
+      margin-top: 6px;
+    }
+
+    .form-group {
+      margin-bottom: clamp(16px, 2.5vw, 24px);
+    }
+
+    .btn-primary {
+      position: relative;
+      width: 100%;
+      padding: clamp(14px, 2vw, 18px) clamp(24px, 3vw, 32px);
+      background: var(--text);
+      color: var(--card);
+      border: none;
+      border-radius: var(--pill);
+      font-weight: 600;
+      font-size: clamp(14px, 1.6vw, 16px);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, filter .12s ease;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    @media (hover:hover) and (pointer:fine) {
+      .btn-primary:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.10), 0 12px 42px rgba(0,0,0,0.10);
+      }
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: scale(.97);
+      filter: brightness(.97);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary:focus-visible {
+      outline: 2px solid var(--ring);
+      outline-offset: 2px;
+    }
+
+    @media (min-width: 600px) {
+      .btn-primary {
+        width: auto;
+        min-width: 200px;
+      }
+    }
+
+    /* Preview */
+    .preview {
+      margin-top: clamp(24px, 4vw, 48px);
+      padding: clamp(20px, 3vw, 32px);
+      background: var(--card);
+      border: 1px solid rgba(10,10,10,0.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .preview h3 {
+      font-size: clamp(18px, 2.2vw, 24px);
+      font-weight: 700;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 13px;
+      border-radius: var(--pill);
+      border: 1px solid rgba(10,10,10,0.12);
+      background: var(--card);
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 120ms ease;
+    }
+
+    .btn-small:hover {
+      transform: translateY(-1px);
+    }
+
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .slide-tile {
+      padding: 16px;
+      border: 1px solid rgba(10,10,10,0.08);
+      border-radius: 12px;
+      background: var(--bg);
+      position: relative;
+    }
+
+    .slide-number {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .slide-preview {
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px;
+      border: none;
+      background: var(--card);
+      border-radius: 6px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 150ms ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .slide-tile:hover .copy-btn {
+      opacity: 1;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Status banner */
+    .status-banner {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .status-banner.error {
+      background: #fee;
+      color: #dc2626;
+      border: 1px solid #fcc;
+    }
+
+    .status-banner.success {
+      background: #efe;
+      color: #059669;
+      border: 1px solid #cfc;
+    }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+
+    .reveal.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+
+    /* Loading spinner */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- NAVIGATION -->
+    <header class="container nav" role="banner">
+      <div class="brand">SlideGen</div>
+      <nav class="nav-actions" aria-label="Primary">
+        <button class="btn active" id="btn-lyrics" aria-pressed="true">Slide Generator</button>
+        <button class="btn" id="btn-bible" aria-pressed="false">Bible</button>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <main role="main">
+      <section class="hero">
+        <h1 id="title" class="hero-title" aria-live="polite" aria-atomic="true">
+          <span class="title-ghost" aria-hidden="true">SlideGen</span>
+          <span class="title-text"></span>
+          <span class="caret" aria-hidden="true"></span>
+        </h1>
+        <p>Generate slides from lyrics or scripture</p>
+      </section>
+    </main>
+  </div>
+
+  <!-- CARDS SECTION -->
+  <section class="container">
+    <div class="cards reveal">
+      <!-- Bible Card -->
+      <article class="card" id="card-bible" style="display: none;">
+        <h2>Create from Bible</h2>
+        
+        <div id="bible-status" role="status" aria-live="polite"></div>
+        
+        <form id="form-bible">
+          <div class="form-group">
+            <label for="input-passage">Passage</label>
+            <input 
+              type="text" 
+              id="input-passage" 
+              name="passage"
+              placeholder="e.g., John 3:16, Psalm 23, Romans 8:28-39"
+              aria-describedby="passage-helper"
+              required
+            />
+            <p class="helper-text" id="passage-helper">
+              Enter any Bible reference
+            </p>
+            <p class="error-text hidden" id="passage-error" role="alert"></p>
+          </div>
+          
+          <button type="submit" class="btn-primary" id="btn-bible-submit">
+            Generate Presentation
+          </button>
+        </form>
+      </article>
+
+      <!-- Lyrics Card -->
+      <article class="card" id="card-lyrics">
+        <h2>Insert Lyrics</h2>
+        
+        <div id="lyrics-status" role="status" aria-live="polite"></div>
+        
+        <form id="form-lyrics">
+          <div class="form-group">
+            <label for="input-title">Title (Optional)</label>
+            <input 
+              type="text"
+              id="input-title" 
+              name="title"
+              placeholder="Enter presentation title"
+            />
+          </div>
+          <div class="form-group">
+            <label for="input-lyrics">Lyrics</label>
+            <textarea 
+              id="input-lyrics" 
+              name="lyrics"
+              placeholder="Paste your lyrics here..."
+              aria-describedby="lyrics-helper"
+              rows="10"
+              required
+            ></textarea>
+            <p class="helper-text" id="lyrics-helper">
+              Paste lyrics or a chorus
+            </p>
+            <p class="error-text hidden" id="lyrics-error" role="alert"></p>
+          </div>
+          
+          <button type="submit" class="btn-primary" id="btn-lyrics-submit">
+            Generate Presentation
+          </button>
+        </form>
+      </article>
+    </div>
+
+    <!-- Preview Section -->
+    <div id="preview-section" class="preview hidden">
+      <div class="preview-header">
+        <h3>Preview</h3>
+        <div class="preview-actions">
+          <button class="btn-small" id="btn-export">Export JSON</button>
+          <button class="btn-small" id="btn-clear">Clear</button>
+        </div>
+      </div>
+      
+      <div class="slides-grid" id="slides-container"></div>
+    </div>
+  </section>
+
+  <script>
+    // ============================================================================
+    // STATE MANAGEMENT
+    // ============================================================================
+    window.appState = {
+      slides: [],
+      sourceType: 'lyrics',
+      loading: false,
+      error: null
+    };
+
+    // ============================================================================
+    // DOM UTILITIES
+    // ============================================================================
+    const qs = (sel) => document.querySelector(sel);
+    const qsa = (sel) => document.querySelectorAll(sel);
+
+    function downloadJSON(name, data) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function copyToClipboard(text) {
+      try {
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          // Fallback for older browsers
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        }
+        return true;
+      } catch (err) {
+        console.error('Copy failed:', err);
+        return false;
+      }
+    }
+
+    // ============================================================================
+    // API LAYER - Integrated with Next.js backend
+    // ============================================================================
+    async function fetchBible(reference) {
+      // Fetch from ESV API via Next.js route
+      const esvResponse = await fetch(`/api/esv?passage=${encodeURIComponent(reference)}`);
+      const esvData = await esvResponse.json();
+
+      if (!esvData.success) {
+        throw new Error('Failed to fetch passage from ESV API');
+      }
+
+      // Generate PowerPoint via Next.js route
+      const response = await fetch('/api/generate-bible-ppt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          verses: esvData.passages[0], 
+          title: esvData.reference 
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate presentation');
+      }
+
+      // Return download URL
+      return {
+        downloadUrl: data.downloadUrl,
+        reference: esvData.reference
+      };
+    }
+
+    async function processLyrics(text, title = 'Lyrics') {
+      // Generate PowerPoint via Next.js route with existing logic
+      const response = await fetch('/api/generate-ppt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          lyrics: text, 
+          title: title || 'Lyrics Presentation'
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate presentation');
+      }
+
+      // Return download URL
+      return {
+        downloadUrl: data.downloadUrl,
+        title: title
+      };
+    }
+
+    // ============================================================================
+    // STATE AND RENDERING
+    // ============================================================================
+    function setState(patch) {
+      Object.assign(window.appState, patch);
+      renderPreview();
+      saveToLocalStorage();
+    }
+
+    function renderPreview() {
+      const { slides } = window.appState;
+      const previewSection = qs('#preview-section');
+      const slidesContainer = qs('#slides-container');
+      
+      if (slides.length === 0) {
+        previewSection.classList.add('hidden');
+        return;
+      }
+      
+      previewSection.classList.remove('hidden');
+      slidesContainer.innerHTML = '';
+      
+      slides.forEach((content, index) => {
+        const tile = document.createElement('div');
+        tile.className = 'slide-tile';
+        
+        const firstWords = content.split(/\s+/).slice(0, 10).join(' ');
+        const preview = firstWords + (content.split(/\s+/).length > 10 ? '...' : '');
+        
+        tile.innerHTML = `
+          <div class="slide-number">Slide ${index + 1}</div>
+          <div class="slide-preview">${preview}</div>
+          <button class="copy-btn" aria-label="Copy slide ${index + 1}" data-index="${index}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        `;
+        
+        slidesContainer.appendChild(tile);
+      });
+      
+      // Attach copy handlers
+      qsa('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const index = parseInt(e.currentTarget.dataset.index);
+          const success = await copyToClipboard(slides[index]);
+          if (success) {
+            e.currentTarget.innerHTML = `
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            `;
+            setTimeout(() => {
+              e.currentTarget.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              `;
+            }, 1500);
+          }
+        });
+      });
+    }
+
+    function renderStatus(cardId, message, type = 'error') {
+      const statusEl = qs(`#${cardId}-status`);
+      if (!message) {
+        statusEl.innerHTML = '';
+        return;
+      }
+      
+      statusEl.innerHTML = `<div class="status-banner ${type}">${message}</div>`;
+    }
+
+    function renderDownload(cardId, downloadUrl, filename) {
+      const card = qs(`#card-${cardId}`);
+      let downloadSection = card.querySelector('.download-section');
+      
+      if (!downloadSection) {
+        downloadSection = document.createElement('div');
+        downloadSection.className = 'download-section';
+        downloadSection.style.cssText = 'margin-top: 24px; padding: 20px; background: var(--bg); border-radius: 16px; text-align: center;';
+        card.appendChild(downloadSection);
+      }
+      
+      downloadSection.innerHTML = `
+        <p style="font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.8px;">Your presentation is ready</p>
+        <a href="${downloadUrl}" download="${filename}.pptx" class="btn-primary" style="display: inline-block; text-decoration: none;">Download PowerPoint</a>
+      `;
+    }
+
+    // ============================================================================
+    // LOCAL STORAGE
+    // ============================================================================
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem('slidegen-state', JSON.stringify({
+          slides: window.appState.slides,
+          sourceType: window.appState.sourceType
+        }));
+      } catch (err) {
+        console.error('Failed to save to localStorage:', err);
+      }
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const saved = localStorage.getItem('slidegen-state');
+        if (saved) {
+          const data = JSON.parse(saved);
+          setState(data);
+        }
+      } catch (err) {
+        console.error('Failed to load from localStorage:', err);
+      }
+    }
+
+    // ============================================================================
+    // EVENT HANDLERS
+    // ============================================================================
+    async function onBibleSubmit(e) {
+      e.preventDefault();
+      
+      const input = qs('#input-passage');
+      const errorEl = qs('#passage-error');
+      const submitBtn = qs('#btn-bible-submit');
+      
+      // Validate
+      if (!input.value.trim()) {
+        input.setAttribute('aria-invalid', 'true');
+        errorEl.textContent = 'Please enter a Bible reference';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      
+      // Clear errors
+      input.removeAttribute('aria-invalid');
+      errorEl.classList.add('hidden');
+      renderStatus('bible', null);
+      
+      // Set loading state
+      setState({ loading: true, error: null, downloadUrl: null });
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span>Generating…';
+      
+      try {
+        const result = await fetchBible(input.value.trim());
+        setState({ 
+          downloadUrl: result.downloadUrl,
+          reference: result.reference,
+          sourceType: 'bible',
+          loading: false 
+        });
+        renderDownload('bible', result.downloadUrl, result.reference);
+        renderStatus('bible', 'Presentation generated successfully!', 'success');
+        setTimeout(() => renderStatus('bible', null), 3000);
+      } catch (err) {
+        setState({ loading: false, error: err.message });
+        renderStatus('bible', err.message || 'Failed to generate presentation');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Generate Presentation';
+      }
+    }
+
+    async function onLyricsSubmit(e) {
+      e.preventDefault();
+      
+      const input = qs('#input-lyrics');
+      const titleInput = qs('#input-title');
+      const errorEl = qs('#lyrics-error');
+      const submitBtn = qs('#btn-lyrics-submit');
+      
+      // Validate
+      if (!input.value.trim()) {
+        input.setAttribute('aria-invalid', 'true');
+        errorEl.textContent = 'Please enter some lyrics';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      
+      // Clear errors
+      input.removeAttribute('aria-invalid');
+      errorEl.classList.add('hidden');
+      renderStatus('lyrics', null);
+      
+      // Set loading state
+      setState({ loading: true, error: null, downloadUrl: null });
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span>Generating…';
+      
+      try {
+        const result = await processLyrics(input.value.trim(), titleInput.value.trim());
+        setState({ 
+          downloadUrl: result.downloadUrl,
+          title: result.title,
+          sourceType: 'lyrics',
+          loading: false 
+        });
+        renderDownload('lyrics', result.downloadUrl, result.title || 'Lyrics');
+        renderStatus('lyrics', 'Presentation generated successfully!', 'success');
+        setTimeout(() => renderStatus('lyrics', null), 3000);
+      } catch (err) {
+        setState({ loading: false, error: err.message });
+        renderStatus('lyrics', err.message || 'Failed to generate presentation');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Generate Presentation';
+      }
+    }
+
+    function onClear() {
+      if (confirm('Clear all slides?')) {
+        setState({ slides: [], error: null });
+        qs('#input-passage').value = '';
+        qs('#input-lyrics').value = '';
+      }
+    }
+
+    function onExport() {
+      const { slides, sourceType } = window.appState;
+      downloadJSON(`slidegen-${sourceType}-${Date.now()}`, { slides, sourceType });
+    }
+
+    function switchTab(tab) {
+      // Update buttons
+      const btnLyrics = qs('#btn-lyrics');
+      const btnBible = qs('#btn-bible');
+      const cardLyrics = qs('#card-lyrics');
+      const cardBible = qs('#card-bible');
+      
+      if (tab === 'lyrics') {
+        btnLyrics.classList.add('active');
+        btnLyrics.setAttribute('aria-pressed', 'true');
+        btnBible.classList.remove('active');
+        btnBible.setAttribute('aria-pressed', 'false');
+        cardLyrics.style.display = 'block';
+        cardBible.style.display = 'none';
+      } else {
+        btnBible.classList.add('active');
+        btnBible.setAttribute('aria-pressed', 'true');
+        btnLyrics.classList.remove('active');
+        btnLyrics.setAttribute('aria-pressed', 'false');
+        cardBible.style.display = 'block';
+        cardLyrics.style.display = 'none';
+      }
+    }
+
+    // ============================================================================
+    // TYPEWRITER EFFECT
+    // ============================================================================
+    async function typeText(el, text, msPerChar = 150) {
+      el.innerHTML = '';
+      for (let i = 0; i < text.length; i++) {
+        const span = document.createElement('span');
+        span.textContent = text[i];
+        span.style.display = 'inline-block';
+        span.style.transition = 'transform .18s ease';
+        span.style.willChange = 'transform';
+        span.style.transitionDelay = (i * 12) + 'ms';
+        el.appendChild(span);
+        await sleep(msPerChar);
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Remove any stray template placeholders
+    function cleanStrayText() {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+      const junk = [];
+      while (walker.nextNode()) {
+        const t = walker.currentNode;
+        if (t.nodeValue && (t.nodeValue.trim().match(/^\{+\.{3}\}+$/) || (t.nodeValue.includes('{{') && t.nodeValue.includes('}}'))))  {
+          junk.push(t);
+        }
+      }
+      junk.forEach(n => n.parentNode && n.parentNode.removeChild(n));
+    }
+
+    // ============================================================================
+    // MICRO-INTERACTIONS
+    // ============================================================================
+    function attachRipples() {
+      document.querySelectorAll('.btn, .btn-primary').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const rect = btn.getBoundingClientRect();
+          const r = Math.max(rect.width, rect.height);
+          const x = (e.clientX || (e.touches && e.touches[0]?.clientX) || rect.left + rect.width/2) - rect.left;
+          const y = (e.clientY || (e.touches && e.touches[0]?.clientY) || rect.top + rect.height/2) - rect.top;
+          const span = document.createElement('span');
+          span.className = 'ripple';
+          span.style.width = span.style.height = r + 'px';
+          span.style.left = (x - r/2) + 'px';
+          span.style.top = (y - r/2) + 'px';
+          btn.appendChild(span);
+          span.addEventListener('animationend', () => span.remove());
+        }, { passive: true });
+      });
+    }
+
+    function revealOnScroll() {
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (en.isIntersecting) {
+            en.target.classList.add('in');
+            io.unobserve(en.target);
+          }
+        });
+      }, { threshold: .12 });
+      document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    }
+
+    function heroParallax() {
+      const hero = document.querySelector('.hero');
+      if (!hero) return;
+      
+      let raf, cx = 0, cy = 0;
+      
+      function onMove(e) {
+        const rect = hero.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - .5;
+        const y = (e.clientY - rect.top) / rect.height - .5;
+        cx = x * 6;
+        cy = y * 6;
+        
+        if (!raf) {
+          raf = requestAnimationFrame(() => {
+            hero.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+            raf = null;
+          });
+        }
+      }
+      
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (window.matchMedia('(pointer:fine)').matches) {
+        hero.addEventListener('mousemove', onMove);
+      }
+    }
+
+    // ============================================================================
+    // INITIALIZATION
+    // ============================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      // Clean any stray template text
+      cleanStrayText();
+      
+      // Setup ghost text for layout reservation
+      const ghostEl = document.querySelector('.title-ghost');
+      const textEl = document.querySelector('.title-text');
+      const full = 'SlideGen';
+      
+      if (ghostEl) ghostEl.textContent = full;
+      
+      // Trigger typewriter animation
+      if (textEl) {
+        typeText(textEl, full, 150);
+      }
+      
+      // Initialize micro-interactions
+      attachRipples();
+      revealOnScroll();
+      heroParallax();
+      
+      // Load saved state
+      loadFromLocalStorage();
+      
+      // Attach event listeners
+      qs('#form-bible').addEventListener('submit', onBibleSubmit);
+      qs('#form-lyrics').addEventListener('submit', onLyricsSubmit);
+      qs('#btn-clear')?.addEventListener('click', onClear);
+      qs('#btn-export')?.addEventListener('click', onExport);
+      
+      qs('#btn-lyrics').addEventListener('click', () => switchTab('lyrics'));
+      qs('#btn-bible').addEventListener('click', () => switchTab('bible'));
+      
+      // Initial render
+      renderPreview();
+    });
+  </script>
+</body>
+</html>
