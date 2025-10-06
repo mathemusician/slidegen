@@ -8,58 +8,50 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('lyrics');
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Logo */}
-      <div className="fixed top-8 left-8 z-50">
-        <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-xl">S</span>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
-      <nav className="fixed top-0 right-0 p-8 z-50">
-        <div className="flex gap-8 items-center">
-          <button
-            onClick={() => setActiveTab('lyrics')}
-            className={`text-lg font-medium transition-colors ${
-              activeTab === 'lyrics' ? 'text-black' : 'text-gray-400 hover:text-gray-700'
-            }`}
-          >
-            Lyrics
-          </button>
-          <button
-            onClick={() => setActiveTab('bible')}
-            className={`text-lg font-medium transition-colors ${
-              activeTab === 'bible' ? 'text-black' : 'text-gray-400 hover:text-gray-700'
-            }`}
-          >
-            Bible
-          </button>
-          <button
-            onClick={() => {
-              document.getElementById('content')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="px-8 py-3.5 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-all text-base shadow-lg hover:shadow-xl"
-          >
-            Get Started
-          </button>
+      <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
+        <div className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-black">SlideGen</h1>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveTab('lyrics')}
+              className={`px-6 py-2.5 rounded-full font-medium transition-all ${
+                activeTab === 'lyrics' 
+                  ? 'bg-black text-white' 
+                  : 'bg-white text-black border border-gray-300 hover:border-gray-400'
+              }`}
+            >
+              SLIDE GENERATOR
+            </button>
+            <button
+              onClick={() => setActiveTab('bible')}
+              className={`px-6 py-2.5 rounded-full font-medium transition-all ${
+                activeTab === 'bible' 
+                  ? 'bg-black text-white' 
+                  : 'bg-white text-black border border-gray-300 hover:border-gray-400'
+              }`}
+            >
+              BIBLE
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <header className="min-h-screen flex items-center justify-center px-4 md:px-8">
+      <header className="min-h-screen flex items-center justify-center px-4 md:px-8 pt-20">
         <div className="text-center max-w-7xl">
-          <h1 className="text-6xl sm:text-[8rem] md:text-[12rem] lg:text-[16rem] font-bold text-black mb-8 md:mb-12 leading-none tracking-tight">
+          <h1 className="text-8xl sm:text-9xl md:text-[12rem] lg:text-[14rem] font-bold text-black mb-8 leading-none tracking-tight">
             SlideGen
           </h1>
-          <p className="text-xl sm:text-2xl md:text-4xl lg:text-5xl text-gray-600 mb-12 md:mb-20 max-w-5xl mx-auto leading-relaxed font-light px-4">
-            Transform lyrics and Bible verses into beautiful presentations
+          <p className="text-2xl sm:text-3xl md:text-4xl text-gray-600 italic font-light">
+            Generate slides from scripture
           </p>
         </div>
       </header>
 
       {/* Content Area */}
-      <main id="content" className="min-h-screen bg-white px-8 py-24">
+      <main className="min-h-screen bg-white px-8 py-24">
         <div className="max-w-4xl mx-auto">
           {activeTab === 'lyrics' ? <LyricsGenerator /> : <BibleGenerator />}
         </div>
