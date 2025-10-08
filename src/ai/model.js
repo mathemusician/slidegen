@@ -60,9 +60,15 @@ async function loadModel() {
         ort.env.wasm.numThreads = 1;
         ort.env.wasm.simd = true;
         
-        // Always use public URL path for WASM files (works in both browser and serverless)
-        ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/';
-        console.info('WASM path set to CDN:', ort.env.wasm.wasmPaths);
+        if (isBrowser) {
+          // Browser: serve from public/
+          ort.env.wasm.wasmPaths = '/';
+        } else {
+          // Vercel serverless: WASM files included via outputFileTracingIncludes
+          // They'll be in node_modules during function execution
+          ort.env.wasm.wasmPaths = './node_modules/onnxruntime-web/dist/';
+          console.info('WASM path set to:', ort.env.wasm.wasmPaths);
+        }
       } else {
         // Local Node.js: use onnxruntime-node (native, faster)
         console.info('Loading onnxruntime-node (native mode)...');
