@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingIncludes: {
+    // Include the ORT loader and WASM plus your model files in the traced bundle
+    '/**': [
+      'public/ort-wasm-simd-threaded.mjs',
+      'public/ort-wasm-simd-threaded.wasm',
+      'public/models/**'
+    ]
+  },
   webpack: (config) => {
     // This is needed for PptxGenJS to work with Next.js
     config.resolve.alias.canvas = false;
@@ -13,17 +21,6 @@ const nextConfig = {
         destination: '/index.html',
       },
     ];
-  },
-  experimental: {
-    outputFileTracingIncludes: {
-      '/api/generate-ppt': [
-        // onnxruntime-web runtime artifacts (non-threaded build to avoid worker complexity)
-        'node_modules/onnxruntime-web/dist/ort-wasm-simd.mjs',
-        'node_modules/onnxruntime-web/dist/ort-wasm-simd.wasm',
-        // your model file that you read via fs in the function
-        'public/models/all-MiniLM-L6-v2/model.onnx',
-      ],
-    },
   },
 };
 
