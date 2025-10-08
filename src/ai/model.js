@@ -63,10 +63,10 @@ async function loadModel() {
         if (isBrowser) {
           ort.env.wasm.wasmPaths = '/';
         } else {
-          // Vercel: WASM files are in public/
+          // Vercel: WASM files are in public/ (needs trailing slash!)
           const __filename = fileURLToPath(import.meta.url);
           const __dirname = dirname(__filename);
-          const wasmPath = join(__dirname, '../../public');
+          const wasmPath = join(__dirname, '../../public') + '/';
           ort.env.wasm.wasmPaths = wasmPath;
           console.info('WASM path set to:', wasmPath);
         }
