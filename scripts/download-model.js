@@ -86,11 +86,13 @@ async function checkAndDownloadModel() {
       const wasmSourceDir = './node_modules/onnxruntime-web/dist';
       const wasmDestDir = './public/';
       
+      // Copy both .wasm and .mjs files (WASM needs JavaScript wrappers)
       const wasmFiles = [
+        'ort-wasm-simd-threaded.wasm',
+        'ort-wasm-simd-threaded.mjs',  // JavaScript wrapper needed for ES modules
         'ort-wasm.wasm',
         'ort-wasm-simd.wasm',
-        'ort-wasm-threaded.wasm',
-        'ort-wasm-simd-threaded.wasm'
+        'ort-wasm-threaded.wasm'
       ];
       
       let copied = 0;
@@ -105,7 +107,7 @@ async function checkAndDownloadModel() {
       }
       
       if (copied > 0) {
-        console.log(`✅ Copied ${copied} WASM files`);
+        console.log(`✅ Copied ${copied} WASM/JS files`);
       } else {
         console.log('✅ WASM files already present');
       }
@@ -143,11 +145,13 @@ async function checkAndDownloadModel() {
     const wasmSourceDir = './node_modules/onnxruntime-web/dist';
     const wasmDestDir = './public/';
     
+    // Copy both .wasm and .mjs files (WASM needs JavaScript wrappers)
     const wasmFiles = [
+      'ort-wasm-simd-threaded.wasm',
+      'ort-wasm-simd-threaded.mjs',  // JavaScript wrapper needed for ES modules
       'ort-wasm.wasm',
       'ort-wasm-simd.wasm',
-      'ort-wasm-threaded.wasm',
-      'ort-wasm-simd-threaded.wasm'
+      'ort-wasm-threaded.wasm'
     ];
     
     for (const file of wasmFiles) {
