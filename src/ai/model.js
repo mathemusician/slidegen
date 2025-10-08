@@ -67,14 +67,18 @@ async function loadModel() {
           // Browser: serve from public/
           ort.env.wasm.wasmPaths = '/';
         } else {
-          // Vercel serverless: Use absolute file URLs resolved via import.meta.url
-          // This points to .next/server/chunks/.../node_modules/onnxruntime-web/dist/
+          // Vercel serverless: Use explicit absolute file URLs for ORT loader and WASM
+          // Base = node_modules/onnxruntime-web/dist/ relative to this module
           // Reference: https://onnxruntime.ai/docs/api/js/interfaces/Env.WasmFilePaths.html
+          const ortDist = new URL('../../node_modules/onnxruntime-web/dist/', import.meta.url);
+          
           ort.env.wasm.wasmPaths = {
-            'ort-wasm-simd-threaded.mjs': new URL('../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs', import.meta.url).href,
-            'ort-wasm-simd-threaded.wasm': new URL('../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm', import.meta.url).href,
+            // Main loader module (.mjs)
+            mjs: new URL('ort-wasm-simd-threaded.mjs', ortDist).toString(),
+            // Corresponding WASM binary
+            wasm: new URL('ort-wasm-simd-threaded.wasm', ortDist).toString(),
           };
-          console.info('WASM paths set to absolute file URLs');
+          console.info('WASM paths configured:', ort.env.wasm.wasmPaths);
         }
       } else {
         // Local Node.js: use onnxruntime-node (native, faster)
