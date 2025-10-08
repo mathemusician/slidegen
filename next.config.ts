@@ -1,19 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // Include WASM files in serverless function deployment
-    // @ts-ignore - outputFileTracingIncludes exists but not in type definitions
-    outputFileTracingIncludes: {
-      '/api/generate-ppt': [
-        './node_modules/onnxruntime-web/dist/*.wasm',
-        './node_modules/onnxruntime-web/dist/*.mjs',
-      ],
-      '/api/classify-lyrics': [
-        './node_modules/onnxruntime-web/dist/*.wasm',
-        './node_modules/onnxruntime-web/dist/*.mjs',
-      ],
-    },
+  // Include ORT Web loader modules and binaries in all server functions
+  // Reference: https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
+  outputFileTracingIncludes: {
+    '/*': [
+      'node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs',
+      'node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm',
+      // Fallbacks if we force no-thread or no-SIMD
+      'node_modules/onnxruntime-web/dist/ort-wasm-simd.mjs',
+      'node_modules/onnxruntime-web/dist/ort-wasm-simd.wasm',
+      'node_modules/onnxruntime-web/dist/ort-wasm.mjs',
+      'node_modules/onnxruntime-web/dist/ort-wasm.wasm',
+    ],
   },
 };
 

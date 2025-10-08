@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import PptxGenJS from 'pptxgenjs';
 
+// Force Node.js runtime (not Edge) for WASM support and file system access
+// Reference: https://nextjs.org/docs/app/building-your-application/rendering/edge-and-nodejs-runtimes
+export const runtime = 'nodejs';
+
 // Dynamic import of classifier (ES modules)
 async function loadClassifier() {
   const { classifyLines, initializeClassifier } = await import('../../../src/ai/classifier.js');

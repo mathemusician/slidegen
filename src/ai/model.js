@@ -20,11 +20,13 @@ const isBrowser = typeof window !== 'undefined';
 const isVercel = process.env.VERCEL === '1';
 let MODEL_PATH;
 
-if (isBrowser) {
-  // Browser: use public path
+if (isBrowser || isVercel) {
+  // Browser/Vercel: use public URL (will fetch)
+  // On Vercel, public/ is served by static layer, not available in function filesystem
+  // Reference: https://nextjs.org/docs/pages/building-your-application/deploying
   MODEL_PATH = '/models/all-MiniLM-L6-v2/model.onnx';
 } else {
-  // Node.js/Vercel: use file system path
+  // Local Node.js: use file system path
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
   MODEL_PATH = join(__dirname, '../../public/models/all-MiniLM-L6-v2/model.onnx');
@@ -64,10 +66,14 @@ async function loadModel() {
           // Browser: serve from public/
           ort.env.wasm.wasmPaths = '/';
         } else {
-          // Vercel serverless: WASM files included via outputFileTracingIncludes
-          // They'll be in node_modules during function execution
-          ort.env.wasm.wasmPaths = './node_modules/onnxruntime-web/dist/';
-          console.info('WASM path set to:', ort.env.wasm.wasmPaths);
+          // Vercel serverless: Use absolute file URLs resolved via import.meta.url
+          // This points to .next/server/chunks/.../node_modules/onnxruntime-web/dist/
+          // Reference: https://onnxruntime.ai/docs/api/js/interfaces/Env.WasmFilePaths.html
+          ort.env.wasm.wasmPaths = {
+            'ort-wasm-simd-threaded.mjs': new URL('../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs', import.meta.url).href,
+            'ort-wasm-simd-threaded.wasm': new URL('../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm', import.meta.url).href,
+          };
+          console.info('WASM paths set to absolute file URLs');
         }
       } else {
         // Local Node.js: use onnxruntime-node (native, faster)
@@ -79,9 +85,32 @@ async function loadModel() {
     // Load the model
     const executionProviders = (isBrowser || isVercel) ? ['wasm'] : ['cpu'];
     console.info('Using execution provider:', executionProviders[0]);
-    session = await ort.InferenceSession.create(MODEL_PATH, {
-      executionProviders,
-    });
+    
+    // On Vercel/Browser, fetch model from URL (public/ is served separately)
+    // Reference: https://onnxruntime.ai/docs/api/js/interfaces/InferenceSessionFactory.html
+    if (isBrowser || isVercel) {
+      const baseUrl = isVercel && process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : (isBrowser ? window.location.origin : 'http://localhost:3000');
+      
+      const modelUrl = `${baseUrl}${MODEL_PATH}`;
+      console.info('Fetching model from:', modelUrl);
+      
+      const response = await fetch(modelUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch model: ${response.statusText}`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      
+      session = await ort.InferenceSession.create(new Uint8Array(arrayBuffer), {
+        executionProviders,
+      });
+    } else {
+      // Local Node.js: load from filesystem
+      session = await ort.InferenceSession.create(MODEL_PATH, {
+        executionProviders,
+      });
+    }
 
     console.info('MiniLM model loaded successfully');
     isLoading = false;
