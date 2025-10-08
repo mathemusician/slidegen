@@ -103,12 +103,12 @@ async function loadModel() {
       });
     } else if (isVercel) {
       // Vercel: Read model from function filesystem (bundled via outputFileTracingIncludes)
-      // Use new URL(..., import.meta.url) for ESM-compatible file path resolution
-      // Reference: https://nodejs.org/api/fs.html
-      const modelFileUrl = new URL('../../public/models/all-MiniLM-L6-v2/model.onnx', import.meta.url);
-      console.info('Loading model from bundled file:', modelFileUrl.pathname);
+      // Use process.cwd() to get absolute path to bundled files
+      // Reference: https://vercel.com/guides/how-can-i-use-files-in-serverless-functions
+      const modelPath = join(process.cwd(), 'public', 'models', 'all-MiniLM-L6-v2', 'model.onnx');
+      console.info('Loading model from bundled file:', modelPath);
       
-      const bytes = await readFile(modelFileUrl);
+      const bytes = await readFile(modelPath);
       session = await ort.InferenceSession.create(new Uint8Array(bytes), {
         executionProviders,
       });
