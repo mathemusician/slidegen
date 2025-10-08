@@ -18,6 +18,21 @@ const CONFIDENCE_THRESHOLD = 0.10; // Minimum confidence for classification
 const USE_HYBRID_APPROACH = true; // Set to false to use ML-only
 
 /**
+ * Normalize text for ML processing (case-insensitive, punctuation-free)
+ * This reduces noise and helps the model focus on semantic content.
+ * Original text formatting is preserved for PowerPoint output.
+ * 
+ * @param {string} text - Text to normalize
+ * @returns {string} - Normalized text (lowercase, no punctuation)
+ */
+function normalizeForML(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '') // Remove all punctuation
+    .trim();
+}
+
+/**
  * Rule-based header patterns
  * Based on Genius.com lyric standards and common variations
  */
@@ -107,7 +122,9 @@ function checkRuleBasedHeader(line) {
  * @returns {Promise<Object>} - Classification result
  */
 async function classifyWithML(line, headerCentroid, lyricCentroid) {
-  const embedding = await embedText(line);
+  // Normalize text before embedding (lowercase, no punctuation)
+  const normalized = normalizeForML(line);
+  const embedding = await embedText(normalized);
   
   const headerSim = cosineSimilarity(embedding, headerCentroid);
   const lyricSim = cosineSimilarity(embedding, lyricCentroid);
@@ -202,7 +219,9 @@ export async function computeCentroid(examples) {
   const embeddings = [];
   
   for (const text of examples) {
-    const embedding = await embedText(text);
+    // Normalize text before embedding (lowercase, no punctuation)
+    const normalized = normalizeForML(text);
+    const embedding = await embedText(normalized);
     embeddings.push(embedding);
   }
   
