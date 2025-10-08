@@ -38,13 +38,25 @@ export async function POST(request: Request) {
 
       // Use AI classifier to intelligently filter headers
       // Handles both standard ([Chorus]) and non-standard (CHORUS, V3) formats
+      console.log('='.repeat(70));
+      console.log('🔬 ATTEMPTING AI-POWERED HEADER DETECTION');
+      console.log('Environment:', {
+        NODE_ENV: process.env.NODE_ENV,
+        VERCEL: process.env.VERCEL,
+        platform: process.platform
+      });
+      console.log('='.repeat(70));
+      
       try {
         const { classifyLines, initializeClassifier } = await loadClassifier();
+        console.log('✅ Classifier module loaded');
         
         if (!centroidsCache) {
           console.log('🤖 Initializing AI classifier...');
           centroidsCache = await initializeClassifier();
           console.log('✅ AI classifier initialized!');
+        } else {
+          console.log('✅ Using cached AI classifier');
         }
         
         console.log('🔬 Classifying lines with AI...');
@@ -65,8 +77,12 @@ export async function POST(request: Request) {
         
         console.log(`✂️  AI filtered ${beforeCount - lines.length} headers, kept ${lines.length} lyrics/uncertain`);
       } catch (aiError) {
-        console.error('❌ AI classification failed, falling back to basic rule-based filtering');
-        console.error('   Error:', aiError instanceof Error ? aiError.message : String(aiError));
+        console.error('='.repeat(70));
+        console.error('❌ AI CLASSIFICATION FAILED - USING FALLBACK');
+        console.error('='.repeat(70));
+        console.error('Error:', aiError);
+        console.error('Stack:', aiError instanceof Error ? aiError.stack : 'No stack trace');
+        console.error('='.repeat(70));
         
         // Fallback to basic bracket-only filtering
         lines = lines.filter((line: string) => {
