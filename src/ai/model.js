@@ -67,16 +67,16 @@ async function loadModel() {
           // Browser: serve from public/
           ort.env.wasm.wasmPaths = '/';
         } else {
-          // Vercel serverless: Use explicit absolute file URLs for ORT loader and WASM
-          // Base = node_modules/onnxruntime-web/dist/ relative to this module
-          // Reference: https://onnxruntime.ai/docs/api/js/interfaces/Env.WasmFilePaths.html
-          const ortDist = new URL('../../node_modules/onnxruntime-web/dist/', import.meta.url);
-          
+          // Vercel serverless: point to the copies that Next puts under .next/server/chunks/node_modules/…
+          // Use a path *relative to this compiled server chunk*.
+          // Important: keep the "./node_modules/…" prefix so resolution stays inside the chunk dir.
+          const ortDist = new URL('./node_modules/onnxruntime-web/dist/', import.meta.url);
+          // Optional: avoid worker complexity on Node by using the non-threaded SIMDish build
+          ort.env.wasm.numThreads = 1;
+          ort.env.wasm.simd = true;
           ort.env.wasm.wasmPaths = {
-            // Main loader module (.mjs)
-            mjs: new URL('ort-wasm-simd-threaded.mjs', ortDist).toString(),
-            // Corresponding WASM binary
-            wasm: new URL('ort-wasm-simd-threaded.wasm', ortDist).toString(),
+            mjs: new URL('ort-wasm-simd.mjs', ortDist),
+            wasm: new URL('ort-wasm-simd.wasm', ortDist),
           };
           console.info('WASM paths configured:', ort.env.wasm.wasmPaths);
         }
