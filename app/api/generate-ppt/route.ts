@@ -51,7 +51,7 @@ export async function POST(request: Request) {
         const results = await classifyLines(lines, centroidsCache!.headerCentroid, centroidsCache!.lyricCentroid);
         
         console.log('📊 Classification results:');
-        results.forEach((r: any) => {
+        results.forEach((r) => {
           console.log(`  ${r.type === 'header' ? '🏷️ ' : r.type === 'lyric' ? '🎵' : '❓'} ${r.type.toUpperCase()} (${r.method}): "${r.text}"`);
         });
         
@@ -60,10 +60,8 @@ export async function POST(request: Request) {
         // Keep lyrics and uncertain (filter out only headers and empty)
         // Uncertain lines are ambiguous but likely lyrics, so keep them
         lines = results
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .filter((r: any) => r.type === 'lyric' || r.type === 'uncertain')
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .map((r: any) => r.text);
+          .filter((r) => r.type === 'lyric' || r.type === 'uncertain')
+          .map((r) => r.text);
         
         console.log(`✂️  AI filtered ${beforeCount - lines.length} headers, kept ${lines.length} lyrics/uncertain`);
       } catch (aiError) {

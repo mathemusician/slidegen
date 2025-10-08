@@ -7,7 +7,11 @@
     "build": "npm run download-model && next build --turbopack",
     "build:local": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run lint && npm run type-check",
+    "prepush": "npm run validate",
     "test": "node tests/run-all-tests.js",
     "test:unit": "node --test src/ai/model.test.js",
     "test:download": "node tests/test-auto-download.js",
@@ -21,7 +25,8 @@
     "test:perf": "node tests/test-performance.js",
     "test:basic": "node tests/test-hybrid-basic.js",
     "download-model": "node scripts/download-model.js",
-    "setup-ai": "npm run download-model && npm test"
+    "setup-ai": "npm run download-model && npm test",
+    "prepare": "husky"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -40,6 +45,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
+    "husky": "^9.1.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

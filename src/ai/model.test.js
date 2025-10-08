@@ -3,7 +3,7 @@
  * Run with: node --test src/ai/model.test.js
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert';
 
 // Mock environment for testing
@@ -35,7 +35,7 @@ describe('AI Model Module', () => {
     it('should return Float32Array when model is available', async () => {
       // This test requires the actual model file to be present
       // Skip if model is not available
-      const { embedText, getLoadError } = await import('./model.js');
+      const { embedText } = await import('./model.js');
       
       // Check if we can load the model
       try {

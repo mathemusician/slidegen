@@ -1,0 +1,14 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run linting only (fast)
+npm run lint
+
+if [ $? -ne 0 ]; then
+  echo "❌ Lint failed. Run 'npm run lint:fix' to auto-fix."
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed!"
