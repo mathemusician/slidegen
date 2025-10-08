@@ -5,6 +5,7 @@
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { readFile } from 'fs/promises';
 
 let ort = null;
 let session = null;
@@ -86,14 +87,9 @@ async function loadModel() {
     const executionProviders = (isBrowser || isVercel) ? ['wasm'] : ['cpu'];
     console.info('Using execution provider:', executionProviders[0]);
     
-    // On Vercel/Browser, fetch model from URL (public/ is served separately)
-    // Reference: https://onnxruntime.ai/docs/api/js/interfaces/InferenceSessionFactory.html
-    if (isBrowser || isVercel) {
-      const baseUrl = isVercel && process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : (isBrowser ? window.location.origin : 'http://localhost:3000');
-      
-      const modelUrl = `${baseUrl}${MODEL_PATH}`;
+    if (isBrowser) {
+      // Browser: fetch from public URL
+      const modelUrl = `${window.location.origin}${MODEL_PATH}`;
       console.info('Fetching model from:', modelUrl);
       
       const response = await fetch(modelUrl);
@@ -103,6 +99,17 @@ async function loadModel() {
       const arrayBuffer = await response.arrayBuffer();
       
       session = await ort.InferenceSession.create(new Uint8Array(arrayBuffer), {
+        executionProviders,
+      });
+    } else if (isVercel) {
+      // Vercel: Read model from function filesystem (bundled via outputFileTracingIncludes)
+      // Use new URL(..., import.meta.url) for ESM-compatible file path resolution
+      // Reference: https://nodejs.org/api/fs.html
+      const modelFileUrl = new URL('../../public/models/all-MiniLM-L6-v2/model.onnx', import.meta.url);
+      console.info('Loading model from bundled file:', modelFileUrl.pathname);
+      
+      const bytes = await readFile(modelFileUrl);
+      session = await ort.InferenceSession.create(new Uint8Array(bytes), {
         executionProviders,
       });
     } else {
