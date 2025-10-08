@@ -47,3 +47,9 @@ python-backend/*.pyc
 python-backend/.env
 *.py[cod]
 *$py.class
+
+# AI Models (downloaded during build)
+public/models/all-MiniLM-L6-v2/*.onnx
+public/models/all-MiniLM-L6-v2/tokenizer.json
+public/models/all-MiniLM-L6-v2/tokenizer_config.json
+public/ort-wasm-simd-threaded.wasm

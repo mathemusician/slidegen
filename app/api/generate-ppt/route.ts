@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import PptxGenJS from 'pptxgenjs';
 
+// Dynamic import of classifier (ES modules)
+async function loadClassifier() {
+  const { classifyLines, initializeClassifier } = await import('../../../src/ai/classifier.js');
+  return { classifyLines, initializeClassifier };
+}
+
+// Cache centroids globally
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let centroidsCache: any = null;
+
 export async function POST(request: Request) {
   try {
     const { lyrics, title } = await request.json();
@@ -22,11 +32,51 @@ export async function POST(request: Request) {
       // Process each group
       let lines = group.split('\n')
         .map((line: string) => line.trim())
-        .filter((line: string) => {
-          // Remove lines with brackets (section headers)
-          if (line.startsWith('[') && line.endsWith(']')) return false;
-          return line.length > 0;
+        .filter((line: string) => line.length > 0);
+
+      console.log(`\n🔍 Processing group with ${lines.length} lines:`, lines);
+
+      // Use AI classifier to intelligently filter headers
+      // Handles both standard ([Chorus]) and non-standard (CHORUS, V3) formats
+      try {
+        const { classifyLines, initializeClassifier } = await loadClassifier();
+        
+        if (!centroidsCache) {
+          console.log('🤖 Initializing AI classifier...');
+          centroidsCache = await initializeClassifier();
+          console.log('✅ AI classifier initialized!');
+        }
+        
+        console.log('🔬 Classifying lines with AI...');
+        const results = await classifyLines(lines, centroidsCache!.headerCentroid, centroidsCache!.lyricCentroid);
+        
+        console.log('📊 Classification results:');
+        results.forEach((r: any) => {
+          console.log(`  ${r.type === 'header' ? '🏷️ ' : r.type === 'lyric' ? '🎵' : '❓'} ${r.type.toUpperCase()} (${r.method}): "${r.text}"`);
         });
+        
+        const beforeCount = lines.length;
+        
+        // Keep lyrics and uncertain (filter out only headers and empty)
+        // Uncertain lines are ambiguous but likely lyrics, so keep them
+        lines = results
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .filter((r: any) => r.type === 'lyric' || r.type === 'uncertain')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map((r: any) => r.text);
+        
+        console.log(`✂️  AI filtered ${beforeCount - lines.length} headers, kept ${lines.length} lyrics/uncertain`);
+      } catch (aiError) {
+        console.error('❌ AI classification failed, falling back to basic rule-based filtering');
+        console.error('   Error:', aiError instanceof Error ? aiError.message : String(aiError));
+        
+        // Fallback to basic bracket-only filtering
+        lines = lines.filter((line: string) => {
+          if (line.startsWith('[') && line.endsWith(']')) return false;
+          return true;
+        });
+        console.log('   📝 Rule-based kept', lines.length, 'lines (Note: AI failed, may miss non-bracket headers)');
+      }
 
       // Special case: Split parentheses onto their own lines
       const processedLines: string[] = [];

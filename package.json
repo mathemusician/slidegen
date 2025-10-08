@@ -4,13 +4,30 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "npm run download-model && next build --turbopack",
+    "build:local": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node tests/run-all-tests.js",
+    "test:unit": "node --test src/ai/model.test.js",
+    "test:download": "node tests/test-auto-download.js",
+    "test:accuracy": "node tests/test-classification-accuracy.js",
+    "test:adversarial": "node tests/test-adversarial.js",
+    "test:security": "node tests/test-security-adversarial.js",
+    "test:api": "node tests/test-api-integration.js",
+    "test:pptx": "node tests/test-pptx-validation.js",
+    "test:edge": "node tests/test-edge-cases.js",
+    "test:songs": "node tests/test-real-songs.js",
+    "test:perf": "node tests/test-performance.js",
+    "test:basic": "node tests/test-hybrid-basic.js",
+    "download-model": "node scripts/download-model.js",
+    "setup-ai": "npm run download-model && npm test"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "next": "15.5.4",
+    "onnxruntime-node": "^1.23.0",
+    "onnxruntime-web": "^1.17.0",
     "pptxgenjs": "^4.0.1",
     "react": "19.1.0",
     "react-dom": "19.1.0"
