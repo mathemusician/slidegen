@@ -17,13 +17,14 @@ const embeddingCache = new Map();
 // Model configuration
 // Detect environment and set appropriate path
 const isBrowser = typeof window !== 'undefined';
+const isVercel = process.env.VERCEL === '1';
 let MODEL_PATH;
 
 if (isBrowser) {
   // Browser: use public path
   MODEL_PATH = '/models/all-MiniLM-L6-v2/model.onnx';
 } else {
-  // Node.js: use file system path
+  // Node.js/Vercel: use file system path
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
   MODEL_PATH = join(__dirname, '../../public/models/all-MiniLM-L6-v2/model.onnx');
@@ -52,20 +53,33 @@ async function loadModel() {
   try {
     // Dynamic import - use appropriate runtime for environment
     if (!ort) {
-      if (isBrowser) {
-        // Browser: use onnxruntime-web with WASM
+      if (isBrowser || isVercel) {
+        // Browser/Vercel: use onnxruntime-web with WASM (serverless-compatible)
+        console.info('Loading onnxruntime-web (WASM mode)...');
         ort = await import('onnxruntime-web');
         ort.env.wasm.numThreads = 1;
         ort.env.wasm.simd = true;
-        ort.env.wasm.wasmPaths = '/';
+        
+        if (isBrowser) {
+          ort.env.wasm.wasmPaths = '/';
+        } else {
+          // Vercel: WASM files are in public/
+          const __filename = fileURLToPath(import.meta.url);
+          const __dirname = dirname(__filename);
+          const wasmPath = join(__dirname, '../../public');
+          ort.env.wasm.wasmPaths = wasmPath;
+          console.info('WASM path set to:', wasmPath);
+        }
       } else {
-        // Node.js: use onnxruntime-node (native, faster)
+        // Local Node.js: use onnxruntime-node (native, faster)
+        console.info('Loading onnxruntime-node (native mode)...');
         ort = await import('onnxruntime-node');
       }
     }
 
     // Load the model
-    const executionProviders = isBrowser ? ['wasm'] : ['cpu'];
+    const executionProviders = (isBrowser || isVercel) ? ['wasm'] : ['cpu'];
+    console.info('Using execution provider:', executionProviders[0]);
     session = await ort.InferenceSession.create(MODEL_PATH, {
       executionProviders,
     });
