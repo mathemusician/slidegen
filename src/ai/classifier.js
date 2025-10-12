@@ -37,20 +37,21 @@ function normalizeForML(text) {
  * Based on Genius.com lyric standards and common variations
  */
 const HEADER_PATTERNS = {
-  // Standard bracket notation (Genius standard)
+  // Standard bracket notation with optional artist attributions (Genius standard)
+  // Matches: [Chorus], [Chorus: Artist Name], [Verse 1: Artist & Another]
   standard: [
-    /^\[Verse\s*\d*\]$/i,
-    /^\[Chorus\]$/i,
-    /^\[Pre-Chorus\]$/i,
-    /^\[Post-Chorus\]$/i,
-    /^\[Bridge\]$/i,
-    /^\[Intro\]$/i,
-    /^\[Outro\]$/i,
-    /^\[Hook\]$/i,
-    /^\[Refrain\]$/i,
-    /^\[Interlude\]$/i,
-    /^\[Breakdown\]$/i,
-    /^\[Skit\]$/i,
+    /^\[Verse\s*\d*(?:\s*:\s*.+?)?\]$/i,
+    /^\[Chorus(?:\s*:\s*.+?)?\]$/i,
+    /^\[Pre-Chorus(?:\s*:\s*.+?)?\]$/i,
+    /^\[Post-Chorus(?:\s*:\s*.+?)?\]$/i,
+    /^\[Bridge(?:\s*:\s*.+?)?\]$/i,
+    /^\[Intro(?:\s*:\s*.+?)?\]$/i,
+    /^\[Outro(?:\s*:\s*.+?)?\]$/i,
+    /^\[Hook(?:\s*:\s*.+?)?\]$/i,
+    /^\[Refrain(?:\s*:\s*.+?)?\]$/i,
+    /^\[Interlude(?:\s*:\s*.+?)?\]$/i,
+    /^\[Breakdown(?:\s*:\s*.+?)?\]$/i,
+    /^\[Skit(?:\s*:\s*.+?)?\]$/i,
   ],
   
   // Non-standard formats (common in raw lyrics)
