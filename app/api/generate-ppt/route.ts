@@ -17,7 +17,7 @@ let centroidsCache: any = null;
 
 export async function POST(request: Request) {
   try {
-    const { lyrics, title } = await request.json();
+    const { lyrics, title, background, textColor, fontFamily } = await request.json();
     
     if (!lyrics || !lyrics.trim()) {
       return NextResponse.json(
@@ -156,8 +156,18 @@ export async function POST(request: Request) {
     slidesContent.forEach((content: string) => {
       const slide = pptx.addSlide();
       
-      // Set black background
-      slide.background = { color: '000000' };
+      // Set background from user preference
+      if (background && background.type === 'image' && background.value) {
+        // For image backgrounds, use the base64 data
+        // Frontend will crop to 16:9 to prevent stretching
+        slide.background = { data: background.value };
+      } else if (background && background.type === 'color' && background.value) {
+        // For color backgrounds, use the hex value
+        slide.background = { color: background.value };
+      } else {
+        // Default to black background
+        slide.background = { color: '000000' };
+      }
       
       // Add all lines as a single text block, centered on the slide
       slide.addText(content, {
@@ -167,9 +177,10 @@ export async function POST(request: Request) {
         h: '50%',
         fontSize: 44,
         bold: true,
-        color: 'FFFFFF',
+        color: textColor || 'FFFFFF',
         align: 'center',
-        valign: 'middle'
+        valign: 'middle',
+        fontFace: fontFamily || 'Calibri'
       });
     });
     
