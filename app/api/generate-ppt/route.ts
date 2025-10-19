@@ -169,18 +169,26 @@ export async function POST(request: Request) {
         slide.background = { color: '000000' };
       }
       
-      // Add all lines as a single text block, centered on the slide
-      slide.addText(content, {
+      // Split content by newlines and create text array for proper line breaks
+      // PptxGenJS requires an array of text objects for multi-line content
+      const textLines = content.split('\n').map(line => ({
+        text: line,
+        options: {
+          fontSize: 44,
+          bold: true,
+          color: textColor || 'FFFFFF',
+          fontFace: fontFamily || 'Calibri',
+          breakLine: true  // Force line break after each line
+        }
+      }));
+      
+      slide.addText(textLines, {
         x: 0.5,
         y: '25%',
         w: 9,
         h: '50%',
-        fontSize: 44,
-        bold: true,
-        color: textColor || 'FFFFFF',
         align: 'center',
-        valign: 'middle',
-        fontFace: fontFamily || 'Calibri'
+        valign: 'middle'
       });
     });
     

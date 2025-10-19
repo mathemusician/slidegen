@@ -24,6 +24,9 @@
     "test:songs": "node tests/test-real-songs.js",
     "test:perf": "node tests/test-performance.js",
     "test:basic": "node tests/test-hybrid-basic.js",
+    "test:context": "node scripts/test-context-aware.js",
+    "test:extreme": "node tests/test-extreme-real-world.js",
+    "test:ultra": "node tests/test-ultra-extreme.js",
     "download-model": "node scripts/download-model.js",
     "setup-ai": "npm run download-model && npm test",
     "prepare": "husky"
