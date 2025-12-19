@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
-    "next": "15.5.4",
+    "next": "15.5.9",
     "onnxruntime-node": "^1.23.0",
     "onnxruntime-web": "^1.17.0",
     "pptxgenjs": "^4.0.1",
