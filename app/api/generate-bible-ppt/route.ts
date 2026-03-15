@@ -19,7 +19,17 @@ export async function POST(request: Request) {
     const verseParts = verses.split(versePattern).filter((part: string) => part.trim().length > 0);
     
     const individualVerses: { text: string; verseNum: string }[] = [];
-    for (let i = 0; i < verseParts.length; i += 2) {
+    // After split with a capture group, the array alternates:
+    // [prefixText?, capturedNum, verseText, capturedNum, verseText, ...]
+    // If the text has a superscription before the first [number] marker
+    // (common in Psalms), the first element is non-numeric prefix text.
+    let startIndex = 0;
+    let superscription = '';
+    if (verseParts.length > 0 && !/^\d+$/.test(verseParts[0])) {
+      superscription = verseParts[0].trim();
+      startIndex = 1;
+    }
+    for (let i = startIndex; i < verseParts.length; i += 2) {
       if (i + 1 < verseParts.length) {
         const verseNum = verseParts[i];
         const verseText = verseParts[i + 1].trim();
@@ -53,7 +63,7 @@ export async function POST(request: Request) {
     // Display reference with user's text color - centered and prominent
     titleSlide.addText(title, { 
       x: '5%',
-      y: '40%',
+      y: superscription ? '30%' : '40%',
       w: '90%',
       h: '20%',
       fontSize: 64,
@@ -63,6 +73,23 @@ export async function POST(request: Request) {
       valign: 'middle',
       fontFace: fontFamily || 'Calibri'
     });
+    
+    // If there's a superscription (common in Psalms), show it below the title
+    if (superscription) {
+      titleSlide.addText(superscription, {
+        x: '10%',
+        y: '55%',
+        w: '80%',
+        h: '15%',
+        fontSize: 24,
+        italic: true,
+        bold: false,
+        align: 'center',
+        color: textColor || 'FFFFFF',
+        valign: 'top',
+        fontFace: fontFamily || 'Calibri'
+      });
+    }
     
     // Add verse slides
     lines.forEach((verse: { text: string; verseNum: string } | string) => {
