@@ -379,6 +379,76 @@
       text-shadow: 0 0 3px rgba(0,0,0,0.5);
     }
 
+    .preset-option {
+      width: 72px;
+      height: 50px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 150ms ease;
+      position: relative;
+      background-size: cover;
+      background-position: center bottom;
+      background-color: #000;
+      flex-shrink: 0;
+    }
+
+    .preset-option:hover {
+      transform: scale(1.05);
+      border-color: var(--text);
+    }
+
+    .preset-option.selected {
+      border-color: var(--text);
+      box-shadow: 0 0 0 3px rgba(10,10,10,0.1);
+    }
+
+    .preset-option.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      text-shadow: 0 0 4px rgba(0,0,0,0.8);
+    }
+
+    .preset-option-label {
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      right: 0;
+      font-size: 8px;
+      font-weight: 700;
+      color: white;
+      text-align: center;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .slide-mockup.church-layout .slide-mockup-text {
+      align-self: flex-start;
+      margin-top: 8%;
+      font-size: clamp(12px, 2.2vw, 22px);
+      max-height: 58%;
+      overflow: hidden;
+    }
+
+    .slide-mockup-ref {
+      position: absolute;
+      top: 6%;
+      left: 5%;
+      right: 5%;
+      z-index: 1;
+      color: white;
+      font-size: clamp(10px, 1.6vw, 16px);
+      font-weight: 700;
+      text-align: center;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+
     .upload-btn {
       display: inline-flex;
       align-items: center;
@@ -840,7 +910,15 @@
           <div class="form-group background-selector">
             <label>Background</label>
             <div class="preset-colors" id="bible-preset-colors">
-              <div class="color-option selected" data-color="000000" style="background: #000000;" title="Black"></div>
+              <div
+                class="preset-option church-preset selected"
+                data-preset="church-bible"
+                style="background-image: url('/backgrounds/church-bible-default.jpg');"
+                title="Church default — black with bible at bottom"
+              >
+                <span class="preset-option-label">Church</span>
+              </div>
+              <div class="color-option" data-color="000000" style="background: #000000;" title="Black"></div>
               <div class="color-option" data-color="FFFFFF" style="background: #FFFFFF;" title="White"></div>
               <div class="color-option" data-color="2C3E50" style="background: #2C3E50;" title="Dark Blue"></div>
               <div class="color-option" data-color="8B4513" style="background: #8B4513;" title="Brown"></div>
@@ -1013,10 +1091,36 @@
       sourceType: 'lyrics',
       loading: false,
       error: null,
-      background: { type: 'color', value: '000000' }, // Default black background
-      textColor: 'FFFFFF', // Default white text
-      fontFamily: 'Calibri' // Default modern font
+      bibleBackground: { type: 'preset', value: 'church-bible' },
+      lyricsBackground: { type: 'color', value: '000000' },
+      background: { type: 'color', value: '000000' },
+      textColor: 'FFFFFF',
+      fontFamily: 'Calibri'
     };
+
+    function isBibleMode() {
+      const cardBible = qs('#card-bible');
+      return cardBible && cardBible.style.display !== 'none';
+    }
+
+    function getActiveBackground() {
+      return isBibleMode()
+        ? window.appState.bibleBackground
+        : window.appState.lyricsBackground;
+    }
+
+    function setActiveBackground(bg) {
+      if (isBibleMode()) {
+        window.appState.bibleBackground = bg;
+      } else {
+        window.appState.lyricsBackground = bg;
+      }
+      window.appState.background = bg;
+    }
+
+    function isChurchPreset(bg = getActiveBackground()) {
+      return bg?.type === 'preset' && bg?.value === 'church-bible';
+    }
 
     // ============================================================================
     // DOM UTILITIES
@@ -1095,15 +1199,15 @@
     // BACKGROUND HANDLING
     // ============================================================================
     function updateVisualPreview() {
-      const { background, slides } = window.appState;
+      const background = getActiveBackground();
+      const { slides } = window.appState;
       const visualGrid = qs('#visual-slides-grid');
+      const churchLayout = isChurchPreset(background);
       
       if (!visualGrid) return;
       
-      // Clear existing previews
       visualGrid.innerHTML = '';
       
-      // Show up to 3 slides in visual preview
       const slidesToShow = Math.min(slides.length || 1, 3);
       const previewSlides = slides.length > 0 ? slides : ['Your text will appear here'];
       
@@ -1119,9 +1223,8 @@
         label.textContent = slides.length > 0 ? `Slide ${i + 1}` : 'Preview';
         
         const mockup = document.createElement('div');
-        mockup.className = 'slide-mockup';
+        mockup.className = 'slide-mockup' + (churchLayout ? ' church-layout' : '');
         
-        // Add background
         if (background.type === 'color') {
           mockup.style.backgroundColor = '#' + background.value;
         } else if (background.type === 'image') {
@@ -1130,12 +1233,27 @@
           bgImg.src = background.value;
           bgImg.alt = '';
           mockup.appendChild(bgImg);
+        } else if (background.type === 'preset' && background.value === 'church-bible') {
+          const bgImg = document.createElement('img');
+          bgImg.className = 'slide-mockup-bg';
+          bgImg.src = '/backgrounds/church-bible-default.jpg';
+          bgImg.alt = '';
+          mockup.appendChild(bgImg);
+        }
+
+        if (churchLayout && slides.length > 0) {
+          const ref = document.createElement('div');
+          ref.className = 'slide-mockup-ref';
+          ref.textContent = slideContent;
+          ref.style.color = '#' + window.appState.textColor;
+          mockup.appendChild(ref);
         }
         
-        // Add text with selected color and font
         const text = document.createElement('div');
         text.className = 'slide-mockup-text';
-        text.textContent = displayText;
+        text.textContent = churchLayout && slides.length > 0
+          ? 'Verse text appears here…'
+          : displayText;
         text.style.color = '#' + window.appState.textColor;
         
         // Apply font with proper fallbacks
@@ -1198,19 +1316,38 @@
       img.src = imageData;
     }
 
-    function handleColorSelection(container, color) {
-      // Update selected state
+    function handleColorSelection(container, color, clickTarget) {
       container.querySelectorAll('.color-option').forEach(opt => {
         opt.classList.remove('selected');
       });
-      event.target.classList.add('selected');
+      container.querySelectorAll('.preset-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      clickTarget.classList.add('selected');
       
-      // Update app state
-      setState({ background: { type: 'color', value: color } });
+      setActiveBackground({ type: 'color', value: color });
       updateVisualPreview();
       checkTextBackgroundContrast();
       
-      // Hide image preview
+      const cardId = container.id.split('-')[0];
+      const imgPreview = qs(`#${cardId}-preview-img`);
+      const contrastWarning = qs(`#${cardId}-contrast-warning`);
+      imgPreview?.classList.add('hidden');
+      contrastWarning?.classList.add('hidden');
+    }
+
+    function handlePresetSelection(container, preset, clickTarget) {
+      container.querySelectorAll('.color-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      container.querySelectorAll('.preset-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      clickTarget.classList.add('selected');
+
+      setActiveBackground({ type: 'preset', value: preset });
+      updateVisualPreview();
+
       const cardId = container.id.split('-')[0];
       const imgPreview = qs(`#${cardId}-preview-img`);
       const contrastWarning = qs(`#${cardId}-contrast-warning`);
@@ -1245,10 +1382,13 @@
     }
 
     function checkTextBackgroundContrast() {
-      const { background, textColor } = window.appState;
+      const background = getActiveBackground();
+      const { textColor } = window.appState;
       
-      // Only check for solid color backgrounds
-      if (background.type !== 'color') return;
+      if (background.type !== 'color') {
+        qsa('.contrast-warning').forEach(w => w.classList.add('hidden'));
+        return;
+      }
       
       // Calculate relative luminance
       const getLuminance = (hex) => {
@@ -1342,20 +1482,16 @@
       // Crop image to 16:9 aspect ratio
       const croppedBase64 = await cropImageTo16x9(file);
       
-      // Update app state
-      setState({ background: { type: 'image', value: croppedBase64 } });
+      setActiveBackground({ type: 'image', value: croppedBase64 });
       updateVisualPreview();
       
-      // Show preview
       const imgPreview = qs(`#${cardId}-preview-img`);
       imgPreview.src = croppedBase64;
       imgPreview.classList.remove('hidden');
       
-      // Check contrast for images
       checkContrast(croppedBase64, `${cardId}-contrast-warning`);
       
-      // Deselect color options
-      qs(`#${cardId}-preset-colors`)?.querySelectorAll('.color-option').forEach(opt => {
+      qs(`#${cardId}-preset-colors`)?.querySelectorAll('.color-option, .preset-option').forEach(opt => {
         opt.classList.remove('selected');
       });
     }
@@ -1379,7 +1515,7 @@
         body: JSON.stringify({ 
           verses: esvData.passages[0], 
           title: esvData.reference,
-          background: window.appState.background,
+          background: window.appState.bibleBackground,
           textColor: window.appState.textColor,
           fontFamily: window.appState.fontFamily
         }),
@@ -1406,7 +1542,7 @@
         body: JSON.stringify({ 
           lyrics: text, 
           title: title || 'Lyrics Presentation',
-          background: window.appState.background,
+          background: window.appState.lyricsBackground,
           textColor: window.appState.textColor,
           fontFamily: window.appState.fontFamily
         }),
@@ -1528,6 +1664,8 @@
         localStorage.setItem('slidegen-state', JSON.stringify({
           slides: window.appState.slides,
           sourceType: window.appState.sourceType,
+          bibleBackground: window.appState.bibleBackground,
+          lyricsBackground: window.appState.lyricsBackground,
           background: window.appState.background,
           textColor: window.appState.textColor,
           fontFamily: window.appState.fontFamily
@@ -1542,6 +1680,12 @@
         const saved = localStorage.getItem('slidegen-state');
         if (saved) {
           const data = JSON.parse(saved);
+          if (!data.bibleBackground) {
+            data.bibleBackground = { type: 'preset', value: 'church-bible' };
+          }
+          if (!data.lyricsBackground) {
+            data.lyricsBackground = data.background || { type: 'color', value: '000000' };
+          }
           setState(data);
         }
       } catch (err) {
@@ -1645,8 +1789,35 @@
 
     // Clear and Export functions removed - user can simply delete text or refresh page
 
+    function syncBackgroundUI(cardId) {
+      const bg = cardId === 'bible'
+        ? window.appState.bibleBackground
+        : window.appState.lyricsBackground;
+      const container = qs(`#${cardId}-preset-colors`);
+      if (!container) return;
+
+      container.querySelectorAll('.color-option, .preset-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+
+      if (bg.type === 'preset') {
+        const preset = container.querySelector(`[data-preset="${bg.value}"]`);
+        preset?.classList.add('selected');
+      } else if (bg.type === 'color') {
+        const color = container.querySelector(`[data-color="${bg.value}"]`);
+        color?.classList.add('selected');
+      }
+
+      const imgPreview = qs(`#${cardId}-preview-img`);
+      if (bg.type === 'image' && imgPreview) {
+        imgPreview.src = bg.value;
+        imgPreview.classList.remove('hidden');
+      } else {
+        imgPreview?.classList.add('hidden');
+      }
+    }
+
     function switchTab(tab) {
-      // Update buttons
       const btnLyrics = qs('#btn-lyrics');
       const btnBible = qs('#btn-bible');
       const cardLyrics = qs('#card-lyrics');
@@ -1659,6 +1830,8 @@
         btnBible.setAttribute('aria-pressed', 'false');
         cardLyrics.style.display = 'block';
         cardBible.style.display = 'none';
+        window.appState.sourceType = 'lyrics';
+        window.appState.background = window.appState.lyricsBackground;
       } else {
         btnBible.classList.add('active');
         btnBible.setAttribute('aria-pressed', 'true');
@@ -1666,7 +1839,14 @@
         btnLyrics.setAttribute('aria-pressed', 'false');
         cardBible.style.display = 'block';
         cardLyrics.style.display = 'none';
+        window.appState.sourceType = 'bible';
+        window.appState.background = window.appState.bibleBackground;
       }
+
+      syncBackgroundUI('bible');
+      syncBackgroundUI('lyrics');
+      updateVisualPreview();
+      checkTextBackgroundContrast();
     }
 
     // ============================================================================
@@ -1820,8 +2000,15 @@
       // Background selectors - Bible
       qsa('#bible-preset-colors .color-option').forEach(opt => {
         opt.addEventListener('click', (e) => {
-          const color = e.target.dataset.color;
-          handleColorSelection(qs('#bible-preset-colors'), color);
+          const color = e.currentTarget.dataset.color;
+          handleColorSelection(qs('#bible-preset-colors'), color, e.currentTarget);
+        });
+      });
+
+      qsa('#bible-preset-colors .preset-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          const preset = e.currentTarget.dataset.preset;
+          handlePresetSelection(qs('#bible-preset-colors'), preset, e.currentTarget);
         });
       });
       
@@ -1832,8 +2019,8 @@
       // Background selectors - Lyrics
       qsa('#lyrics-preset-colors .color-option').forEach(opt => {
         opt.addEventListener('click', (e) => {
-          const color = e.target.dataset.color;
-          handleColorSelection(qs('#lyrics-preset-colors'), color);
+          const color = e.currentTarget.dataset.color;
+          handleColorSelection(qs('#lyrics-preset-colors'), color, e.currentTarget);
         });
       });
       
@@ -1877,6 +2064,8 @@
       });
       
       // Initial render
+      syncBackgroundUI('bible');
+      syncBackgroundUI('lyrics');
       renderPreview();
       updateVisualPreview();
       checkTextBackgroundContrast();

@@ -1,5 +1,49 @@
 import { NextResponse } from 'next/server';
 import PptxGenJS from 'pptxgenjs';
+import fs from 'fs';
+import path from 'path';
+
+const CHURCH_BG_PATH = path.join(process.cwd(), 'public/backgrounds/church-bible-default.jpg');
+
+type ResolvedBackground =
+  | { type: 'image'; data: string; isChurchPreset: boolean }
+  | { type: 'color'; color: string; isChurchPreset: boolean };
+
+function loadChurchBackground(): ResolvedBackground {
+  const buffer = fs.readFileSync(CHURCH_BG_PATH);
+  return {
+    type: 'image',
+    data: `image/jpeg;base64,${buffer.toString('base64')}`,
+    isChurchPreset: true,
+  };
+}
+
+function resolveBackground(
+  background?: { type?: string; value?: string }
+): ResolvedBackground {
+  if (background?.type === 'preset' && background.value === 'church-bible') {
+    return loadChurchBackground();
+  }
+  if (background?.type === 'image' && background.value) {
+    return { type: 'image', data: background.value, isChurchPreset: false };
+  }
+  if (background?.type === 'color' && background.value) {
+    return { type: 'color', color: background.value, isChurchPreset: false };
+  }
+  // Church bible background is the default for scripture slides
+  return loadChurchBackground();
+}
+
+function applySlideBackground(
+  slide: ReturnType<PptxGenJS['addSlide']>,
+  resolved: ResolvedBackground
+) {
+  if (resolved.type === 'image') {
+    slide.background = { data: resolved.data };
+  } else {
+    slide.background = { color: resolved.color };
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -42,6 +86,10 @@ export async function POST(request: Request) {
       ? individualVerses 
       : verses.split('\n').map((line: string) => line.trim()).filter((line: string) => line.length > 0).map((line: string) => ({ text: line, verseNum: '' }));
 
+    const resolvedBg = resolveBackground(background);
+    const color = textColor || 'FFFFFF';
+    const font = fontFamily || 'Calibri';
+
     // Create PowerPoint
     const pptx = new PptxGenJS();
     
@@ -50,44 +98,36 @@ export async function POST(request: Request) {
     
     // Add title slide with user's selected styling
     const titleSlide = pptx.addSlide();
+    applySlideBackground(titleSlide, resolvedBg);
     
-    // Use same background as verse slides
-    if (background && background.type === 'image' && background.value) {
-      titleSlide.background = { data: background.value };
-    } else if (background && background.type === 'color' && background.value) {
-      titleSlide.background = { color: background.value };
-    } else {
-      titleSlide.background = { color: '000000' };
-    }
-    
-    // Display reference with user's text color - centered and prominent
+    // Display reference in the upper two-thirds (above the bible image)
     titleSlide.addText(title, { 
       x: '5%',
-      y: superscription ? '30%' : '40%',
+      y: resolvedBg.isChurchPreset ? (superscription ? '18%' : '28%') : (superscription ? '30%' : '40%'),
       w: '90%',
-      h: '20%',
-      fontSize: 64,
+      h: resolvedBg.isChurchPreset ? '18%' : '20%',
+      fontSize: resolvedBg.isChurchPreset ? 48 : 64,
       bold: true,
       align: 'center',
-      color: textColor || 'FFFFFF',
+      color,
       valign: 'middle',
-      fontFace: fontFamily || 'Calibri'
+      fontFace: font
     });
     
     // If there's a superscription (common in Psalms), show it below the title
     if (superscription) {
       titleSlide.addText(superscription, {
         x: '10%',
-        y: '55%',
+        y: resolvedBg.isChurchPreset ? '38%' : '55%',
         w: '80%',
-        h: '15%',
+        h: '12%',
         fontSize: 24,
         italic: true,
         bold: false,
         align: 'center',
-        color: textColor || 'FFFFFF',
+        color,
         valign: 'top',
-        fontFace: fontFamily || 'Calibri'
+        fontFace: font
       });
     }
     
@@ -99,47 +139,64 @@ export async function POST(request: Request) {
       const verseText = typeof verse === 'string' ? verse : verse.text;
       const verseNum = typeof verse === 'string' ? '' : verse.verseNum;
       
-      // Set background from user preference
-      if (background && background.type === 'image' && background.value) {
-        // For image backgrounds, use the base64 data
-        // Frontend will crop to 16:9 to prevent stretching
-        slide.background = { data: background.value };
-      } else if (background && background.type === 'color' && background.value) {
-        // For color backgrounds, use the hex value
-        slide.background = { color: background.value };
-      } else {
-        // Default to black background
-        slide.background = { color: '000000' };
-      }
+      applySlideBackground(slide, resolvedBg);
       
-      // Add verse text - centered and large
-      slide.addText(verseText, {
-        x: 0.5,
-        y: '30%',
-        w: 9,
-        h: '40%',
-        fontSize: 36,
-        bold: false,
-        color: textColor || 'FFFFFF',
-        align: 'center',
-        valign: 'middle',
-        fontFace: fontFamily || 'Calibri'
-      });
-      
-      // Add verse number reference at bottom-right (if available)
-      if (verseNum) {
-        slide.addText(`v. ${verseNum}`, {
-          x: 8.5,
-          y: 5,
-          w: 1,
-          h: 0.3,
-          fontSize: 14,
-          bold: false,
-          color: textColor || 'FFFFFF',
-          align: 'right',
-          valign: 'bottom',
-          fontFace: fontFamily || 'Calibri'
+      if (resolvedBg.isChurchPreset) {
+        // Passage reference at top; verse uses most of slide above the compact bible image
+        slide.addText(title, {
+          x: '5%',
+          y: '5%',
+          w: '90%',
+          h: '8%',
+          fontSize: 26,
+          bold: true,
+          align: 'center',
+          color,
+          valign: 'top',
+          fontFace: font
         });
+
+        slide.addText(verseText, {
+          x: '7%',
+          y: '13%',
+          w: '86%',
+          h: '46%',
+          fontSize: 36,
+          bold: false,
+          color,
+          align: 'center',
+          valign: 'middle',
+          fontFace: font
+        });
+      } else {
+        // Standard layout for solid colors / custom uploads
+        slide.addText(verseText, {
+          x: 0.5,
+          y: '30%',
+          w: 9,
+          h: '40%',
+          fontSize: 36,
+          bold: false,
+          color,
+          align: 'center',
+          valign: 'middle',
+          fontFace: font
+        });
+        
+        if (verseNum) {
+          slide.addText(`v. ${verseNum}`, {
+            x: 8.5,
+            y: 5,
+            w: 1,
+            h: 0.3,
+            fontSize: 14,
+            bold: false,
+            color,
+            align: 'right',
+            valign: 'bottom',
+            fontFace: font
+          });
+        }
       }
     });
     
